@@ -35,7 +35,44 @@ const DB = {
 function commit(){
   stampAndNotify();
   DB.save();
+  maybeAutoBackup();
 }
+
+/* ---- automatic local backups (3 rolling snapshots, per profile) ---- */
+function autoBakKey(){
+  return 'aquaflow_autobak_' + (typeof AUTH !== 'undefined' ? AUTH.dbKey(AUTH.session() || 'guest') : DB.key);
+}
+function autoBakStore(){
+  try { return JSON.parse(localStorage.getItem(autoBakKey()) || '[]'); } catch(e){ return []; }
+}
+function maybeAutoBackup(){
+  if(!db || db.memoryMode) return;
+  const store = autoBakStore();
+  const last = store[0] ? store[0].at : 0;
+  const now = Date.now();
+  if(last && now - new Date(last).getTime() < 5*60*1000) return; // at most once / 5 min
+  const json = JSON.stringify(db);
+  if(json.length > 4.5 * 1024 * 1024) return; // too large to snapshot safely
+  store.unshift({ at: new Date().toISOString(), size: json.length, json });
+  try {
+    localStorage.setItem(autoBakKey(), JSON.stringify(store.slice(0,3)));
+  } catch(e){ /* quota — skip, never break a commit */ }
+}
+function listAutoBackups(){ return autoBakStore(); }
+function restoreAutoBackup(idx){
+  const store = autoBakStore();
+  const b = store[idx];
+  if(!b) return {ok:false, error:'Backup not found'};
+  try {
+    const d = JSON.parse(b.json);
+    if(!d || d.v !== 1) return {ok:false, error:'Backup unreadable'};
+    db = d;
+    prevDbJson = JSON.stringify(db);
+    DB.save();
+    return {ok:true, at:b.at};
+  } catch(e){ return {ok:false, error:'Restore failed: ' + e.message}; }
+}
+function clearAutoBackups(){ try { localStorage.removeItem(autoBakKey()); } catch(e){} }
 
 /* ---- offline-first change tracking (feeds sync merge) ---- */
 let prevDbJson = null;
@@ -52,6 +89,55 @@ function stampAndNotify(){
   if(window.__AQUAFLOW && window.__AQUAFLOW.sendDb) {
     try { window.__AQUAFLOW.sendDb(JSON.stringify(db)); } catch(e){}
   }
+}
+
+/* ================= reminders / notification center ================= */
+function reminders(){
+  if(!db) return [];
+  const t = isoDate(today());
+  const tm = isoDate(addDays(today(), 1));
+  const out = [];
+  db.invoices.forEach(i => {
+    const st = invState(i);
+    if(i.status === 'Draft') return;
+    if(st.label === 'Overdue') out.push({group:'Payments overdue', label:`${i.ref} — ${money(st.balance)} overdue`, sub:fmtDate(i.due), view:'invoice', params:{id:i.id}, tone:'red'});
+    else if(st.label === 'Open' && i.due && dayDiff(t, i.due) <= 3 && st.balance > 0) out.push({group:'Due soon', label:`${i.ref} — ${money(st.balance)} due`, sub:relDays(i.due), view:'invoice', params:{id:i.id}, tone:'amber'});
+  });
+  db.jobs.forEach(j => {
+    if(['Cancelled','Completed'].includes(j.status)) return;
+    if(j.date === t) out.push({group:"Today's jobs", label:`${j.ref} — ${j.title}`, sub:`${j.start} · ${fmtDateShort(j.date)}`, view:'jobs', params:{}, tone:'sky'});
+    else if(j.date === tm && j.status === 'Scheduled') out.push({group:'Scheduled tomorrow', label:`${j.ref} — ${j.title}`, sub:`${j.start} · ${fmtDateShort(j.date)}`, view:'jobs', params:{}, tone:'indigo'});
+  });
+  db.quotes.forEach(q => {
+    if(q.status === 'Sent' && dayDiff(isoDate(new Date(q.createdAt||t)), t) >= 3){
+      out.push({group:'Awaiting approval', label:`${q.ref} — ${money(quoteTotal(q))} pending`, sub:'follow up with customer', view:'quotes', params:{}, tone:'violet'});
+    }
+  });
+  db.maintenance.forEach(m => {
+    const d = dayDiff(t, nextDueDate(m));
+    if(d <= 7) out.push({group:'Maintenance due', label:`${m.title||'Plan'} — ${m.equipment||'equipment'}`, sub: d<=0 ? 'overdue' : `in ${d} day${d===1?'':'s'}`, view:'maintenance', params:{}, tone:'amber'});
+  });
+  const order = {red:0, amber:1, violet:2, sky:3, indigo:4};
+  return out.sort((a,b) => (order[a.tone]??9) - (order[b.tone]??9));
+}
+function reminderSheet(){
+  const r = reminders();
+  const groups = {};
+  r.forEach(x => (groups[x.group] = groups[x.group] || []).push(x));
+  const body = r.length
+    ? Object.entries(groups).map(([g, items]) =>
+        `<div class="muted small mt8" style="text-transform:uppercase;letter-spacing:.4px">${esc(g)}</div>` +
+        items.map(x => `<button class="rem-item tone-${x.tone}" data-view="${x.view}" data-params="${JSON.stringify(x.params).replace(/"/g,'&quot;')}">
+          <span class="rem-lbl">${esc(x.label)}</span><span class="muted small">${esc(x.sub||'')}</span>
+        </button>`).join('')).join('')
+    : `<div class="empty">All clear — nothing needs your attention. 🎉</div>`;
+  sheetOpen(`
+    <div class="sheet-grab"></div>
+    <div class="sheet-head"><h3>${icon('bell',17)} Reminders</h3><button class="x" data-close>✕</button></div>
+    <div style="padding:4px 18px 22px">${body}</div>
+    <div class="sheet-note">Unpaid invoices · today's &amp; tomorrow's jobs · quotes awaiting approval · maintenance due</div>`);
+  $('#sheet [data-close]').onclick = sheetClose;
+  $$('#sheet .rem-item').forEach(b => b.onclick = () => go(b.dataset.view, JSON.parse(b.dataset.params || '{}')));
 }
 
 /* ================= lookups ================= */
@@ -211,6 +297,9 @@ const ICONS = {
   mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
   chevL:'<path d="M14 6l-6 6 6 6"/>',
   chevR:'<path d="M10 6l6 6-6 6"/>',
+  chart:'<path d="M4 20V9M10 20V4M16 20v-6M3 20h18"/>',
+  camera:'<path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.4"/>',
+  print:'<path d="M7 8V3h10v5M7 17H4v-6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6h-3M7 14h10v7H7z"/>',
   userPlus:'<circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.2 3.4-5 6.5-5s5.7 1.8 6.5 5"/><path d="M19 6v6M16 9h6"/>',
   send:'<path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/>',
   sync:'<path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2" transform="translate(0,0)"/><path d="M21 3v6h-6M3 21v-6h6"/>',
@@ -256,6 +345,26 @@ function donut(segs, {size=150, thick=20} = {}){
 
 /* ================= business pipeline (Lead→Quote→Scheduled→In Progress→Completed→Invoiced→Paid) ================= */
 const PIPELINE = ['Quote','Scheduled','In Progress','Completed','Invoiced','Paid'];
+
+/* ---- job activity timeline (CRM-style audit trail) ---- */
+function jobLog(job, text){
+  if(!job || !text) return;
+  job.timeline = job.timeline || [];
+  job.timeline.push({ at: new Date().toISOString(), text: String(text).slice(0,500) });
+  if(job.timeline.length > 100) job.timeline = job.timeline.slice(-100);
+}
+function timelineHTML(job){
+  const list = (job.timeline||[]).slice().reverse();
+  if(!list.length) return '<div class="muted small">No activity yet — status changes are logged here automatically.</div>';
+  return `<div class="timeline">` + list.map(t => {
+    const d = new Date(t.at);
+    return `<div class="tl-item"><span class="tl-dot"></span>
+      <div><div class="tl-text">${esc(t.text)}</div>
+      <div class="muted small">${d.toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'})} · ${pad2(d.getHours())}:${pad2(d.getMinutes())}</div></div>
+    </div>`;
+  }).join('') + `</div>`;
+}
+
 function jobInvoice(job){ return db.invoices.find(i=>i.jobId===job.id) || null; }
 function jobQuote(job){ return db.quotes.find(q=>q.jobId===job.id) || null; }
 function jobHasQuote(job){ return db.quotes.some(q=>q.jobId===job.id && q.status!=='Declined'); }
@@ -461,6 +570,7 @@ function go(view, params = {}){
   c.scrollTop = 0;
   window.scrollTo(0,0);
   if(v.mount) v.mount(params);
+  if(typeof refreshBell === 'function') refreshBell();
 }
 function reRender(){ go(ui.view, ui.params); }
 

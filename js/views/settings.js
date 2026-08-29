@@ -35,6 +35,12 @@ VIEWS.settings = {
             <div class="field"><label>WhatsApp number (digits, intl)</label><input class="inp" id="st-wa" value="${esc(b.whatsapp)}" placeholder="254712345678"></div>
             <div class="field"><label>Email</label><input class="inp" id="st-email" value="${esc(b.email)}"></div>
             <div class="field"><label>Address</label><input class="inp" id="st-addr" value="${esc(b.address)}"></div>
+            <div class="field span2"><label>Logo (appears on quotations &amp; invoices)</label>
+              <div class="row">
+                ${b.logo ? `<img class="logo-preview" src="${b.logo}" alt="Business logo">` : '<span class="muted small">No logo yet — upload one for professional PDFs.</span>'}
+                <label class="btn ghost sm" style="cursor:pointer">${icon('upload',14)} Upload logo<input type="file" id="st-logo" accept="image/*" style="display:none"></label>
+                ${b.logo ? '<button class="btn ghost sm" id="st-logo-rm">Remove</button>' : ''}
+              </div></div>
           </div>
         </div>
         <div class="card">
@@ -105,6 +111,15 @@ VIEWS.settings = {
             <button class="btn ghost" id="st-export">${icon('download',14)} Export JSON backup</button>
             <label class="btn ghost" style="cursor:pointer">${icon('upload',14)} Import JSON<input type="file" id="st-import" accept="application/json" style="display:none"></label>
             <button class="btn danger" id="st-reset">${icon('trash',14)} Reset demo data</button>
+          </div>
+          <div class="mt12" style="border-top:1px dashed #eef2f7;padding-top:12px">
+            <b class="small">Automatic backups</b>
+            <div class="muted small">A snapshot of your whole business is saved on this device as you work (last 3 kept, one per 5 minutes). Restore one if anything ever goes wrong.</div>
+            <div id="st-baklist" class="mt8"></div>
+            <div class="row mt8" style="flex-wrap:wrap">
+              <button class="btn ghost sm" id="st-bak-restore">↩ Restore latest backup</button>
+              <button class="btn ghost sm" id="st-bak-clear">Clear backups</button>
+            </div>
           </div>
           ${db.memoryMode ? '<div class="badge-warn mt12">Storage is unavailable in this context — changes will not persist after reload (demo mode).</div>' : ''}
         </div>
@@ -178,6 +193,43 @@ VIEWS.settings = {
       $('#side-foot').innerHTML = sideFootHTML();
       toast('Demo data restored');
     }, {label:'Reset everything'});
+
+    /* ---- logo ---- */
+    const logoInput = $('#st-logo');
+    if(logoInput) logoInput.onchange = async () => {
+      const f = logoInput.files && logoInput.files[0];
+      if(!f) return;
+      try {
+        const dataUrl = await compressImageFile(f, 256, 0.85);
+        b.logo = dataUrl;
+        commit(); reRender();
+        toast('Logo saved — it now appears on quotations & invoices');
+      } catch(e){ toast('Could not read that image','err'); }
+    };
+    if($('#st-logo-rm')) $('#st-logo-rm').onclick = () => { b.logo = null; commit(); reRender(); toast('Logo removed'); };
+
+    /* ---- automatic backups ---- */
+    const renderBak = () => {
+      const list = listAutoBackups();
+      const el = $('#st-baklist');
+      if(!el) return;
+      el.innerHTML = list.length
+        ? list.map((x,i) => `<div class="r small" style="padding:3px 0"><span>${fmtDate(x.at)} · ${new Date(x.at).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'})}</span><span class="muted">${Math.round(x.size/1024)} KB${i===0?' · <b>latest</b>':''}</span></div>`).join('')
+        : '<div class="muted small">No automatic backups yet — they appear as you work.</div>';
+    };
+    renderBak();
+    $('#st-bak-restore').onclick = () => {
+      const list = listAutoBackups();
+      if(!list.length){ toast('No backups to restore yet','warn'); return; }
+      askConfirm(`Replace current data with the backup from <b>${fmtDate(list[0].at)}</b>? Your changes since then will be lost (export a manual backup first if unsure).`, () => {
+        const r = restoreAutoBackup(0);
+        if(r.ok){ reRender(); renderBak(); toast(`Restored backup from ${fmtDate(r.at)}`); }
+        else toast(r.error, 'err');
+      }, {label:'Restore backup'});
+    };
+    $('#st-bak-clear').onclick = () => askConfirm('Delete all automatic backups?', () => {
+      clearAutoBackups(); renderBak(); toast('Backups cleared');
+    }, {label:'Clear all'});
 
     /* ---- team ---- */
     $('#st-tech-add').onclick = () => techModal(null);

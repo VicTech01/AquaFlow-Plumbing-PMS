@@ -205,11 +205,11 @@ function jobsPipelineMount(){
     const inv = jobInvoice(j);
     if(na==='quote'){ go('quote_edit', {jobId: j.id}); }
     else if(na==='dispatch'){ go('dispatch'); }
-    else if(na==='start'){ j.status='In Progress'; commit(); toast(`${j.ref} started`); reRender(); }
-    else if(na==='complete'){ j.status='Completed'; commit(); toast(`Job ${j.ref} completed`); reRender(); }
+    else if(na==='start'){ j.status='In Progress'; jobLog(j, 'Work started — crew on site'); commit(); toast(`${j.ref} started`); reRender(); }
+    else if(na==='complete'){ j.status='Completed'; jobLog(j, 'Job completed'); commit(); toast(`Job ${j.ref} completed`); reRender(); }
     else if(na==='invoice'){ go('invoice_new', {jobId: j.id}); }
     else if(na==='collect'){ payModal(inv); }
-    else if(na==='resume'){ j.status='Scheduled'; commit(); toast(`${j.ref} resumed`); reRender(); }
+    else if(na==='resume'){ j.status='Scheduled'; jobLog(j, 'Resumed from hold'); commit(); toast(`${j.ref} resumed`); reRender(); }
     else if(na==='done'){ openJobModal(j.id); }
   });
 }
@@ -277,10 +277,12 @@ function jobModal(prefill = {}, afterSave){
         if(prefill.id){
           job = jobById(prefill.id);
           Object.assign(job, data);
+          jobLog(job, `Job details updated (status: ${data.status})`);
           toast(`Job ${job.ref} updated`);
         } else {
           job = Object.assign({id:uid('j'), ref:nextRef('job'), createdAt:isoDate(today())}, data);
           db.jobs.push(job);
+          jobLog(job, `Job scheduled — ${fmtDateShort(date)} ${data.start} (${customerById(custId)?.name||''})`);
           toast(`Job ${job.ref} scheduled for ${fmtDateShort(date)}`);
         }
         commit(); closeModal();
@@ -380,10 +382,85 @@ function materialsModal(job){
           it.history.unshift({at:isoDate(today()), delta:-r.qty, reason:`Used on ${job.ref}`});
           if(inv) inv.items.push({kind:'Material', desc:it.name, qty:r.qty, unit:it.unit, price:it.price, invId:it.id});
         });
+        jobLog(job, `Materials recorded: ${rows.map(r=>`${r.item.name} ×${r.qty}`).join(', ')}`);
         commit(); closeModal();
         toast(`Recorded ${rows.length} material line(s) on ${job.ref}${inv?` — billed to ${inv.ref}`:''}`);
         warns.forEach(w => toast(w,'warn'));
         reRender(); openJobModal(job.id);
+      };
+    }
+  });
+}
+
+/* ================= job photos (compressed, stored on the job) ================= */
+function addJobPhoto(job, stage, dataUrl){
+  if(!dataUrl || !String(dataUrl).startsWith('data:image')) return false;
+  if(dataUrl.length > 450*1024){ toast('Image is too large even after compression','warn'); return false; }
+  job.photos = job.photos || [];
+  job.photos.push({ id: uid('ph'), stage, dataUrl, at: new Date().toISOString() });
+  return true;
+}
+function photosHTML(j){
+  const ps = (j.photos||[]).slice().reverse();
+  if(!ps.length) return '<div class="muted small">No photos yet — add before / progress / after shots.</div>';
+  return ps.map(p => `
+    <div class="photo-item">
+      <img src="${p.dataUrl}" alt="${esc(p.stage)} photo">
+      <div class="photo-meta">
+        <span class="chip c-${p.stage==='Before'?'gray':p.stage==='Progress'?'amber':'green'}">${p.stage}</span>
+        <button class="photo-del" data-p="${p.id}" title="Remove photo">✕</button>
+      </div>
+    </div>`).join('');
+}
+function compressImageFile(file, maxDim=1000, q=0.72){
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onerror = () => reject(fr.error || new Error('read failed'));
+    fr.onload = () => {
+      try {
+        const img = new Image();
+        img.onerror = () => resolve(fr.result); // fallback: keep original if the platform cannot rasterize
+        img.onload = () => {
+          try {
+            const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+            const w = Math.max(1, Math.round(img.width * scale)), h = Math.max(1, Math.round(img.height * scale));
+            const cv = document.createElement('canvas');
+            cv.width = w; cv.height = h;
+            cv.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(cv.toDataURL('image/jpeg', q));
+          } catch(e){ resolve(fr.result); }
+        };
+        img.src = fr.result;
+      } catch(e){ resolve(fr.result); }
+    };
+    fr.readAsDataURL(file);
+  });
+}
+
+/* ================= site visit (Lead → Site visit stage) ================= */
+function siteVisitModal(jobId){
+  openModal('Record site visit', `
+    <p class="muted small">Log that you (or a technician) inspected the site. This is the step between a new lead and a quotation.</p>
+    <div class="field"><label>Job</label>
+      <select class="inp" id="sv-job">
+        ${db.jobs.filter(j=>j.status!=='Cancelled').map(j=>`<option value="${j.id}" ${j.id===jobId?'selected':''}>${j.ref} · ${esc(j.title)} (${fmtDateShort(j.date)})</option>`).join('')}
+      </select></div>
+    <div class="field"><label>Findings / notes</label>
+      <textarea class="inp" id="sv-note" rows="3" placeholder="What was found on site — access, meter readings, photos taken, what the customer confirmed…"></textarea></div>
+  `, {
+    width:'md',
+    footerHtml:`<button class="btn ghost" id="sv-x">Cancel</button><button class="btn primary" id="sv-go">${icon('pin',14)} Record visit</button>`,
+    onMount(){
+      $('#sv-x').onclick = closeModal;
+      $('#sv-go').onclick = () => {
+        const j = jobById($('#sv-job').value);
+        const note = $('#sv-note').value.trim();
+        if(!j){ toast('Pick a job','warn'); return; }
+        j.siteVisit = { at: new Date().toISOString(), note };
+        jobLog(j, `Site visit completed${note ? ' — ' + note : ''}`);
+        commit(); closeModal();
+        toast(`Site visit recorded on ${j.ref}`);
+        reRender();
       };
     }
   });
@@ -428,7 +505,31 @@ function openJobModal(id){
     </div>
     ${j.notes ? `<div class="badge-info">${icon('doc',14)} ${esc(j.notes)}</div>` : ''}
     ${jobIncomeCardHTML(j)}
+    <div class="grid2 mt12">
+      <div class="card" style="background:#f8fafc">
+        <h3>${icon('clock',15)} Activity timeline</h3>
+        ${timelineHTML(j)}
+        <div class="row mt8">
+          <input class="inp" id="jt-note" placeholder="Add a note to the timeline…">
+          <button class="btn ghost sm" id="jt-add">${icon('plus',14)} Add</button>
+        </div>
+      </div>
+      <div class="card" style="background:#f8fafc">
+        <h3>${icon('camera',15)} Job photos</h3>
+        <p class="muted small">Before / progress / after — kept on the job as documentation of the work.</p>
+        <div class="row mb8">
+          <select class="inp" id="jp-stage" style="max-width:150px">
+            <option value="Before">Before</option>
+            <option value="Progress">Progress</option>
+            <option value="After">After</option>
+          </select>
+          <label class="btn ghost sm" style="cursor:pointer">${icon('camera',14)} Add photos<input type="file" id="jp-file" accept="image/*" multiple style="display:none"></label>
+        </div>
+        <div class="photo-grid" id="jp-grid">${photosHTML(j)}</div>
+      </div>
+    </div>
     <div class="row mt12" style="flex-wrap:wrap">
+      <button class="btn ghost sm jd-site">${icon('pin',14)} Record site visit</button>
       <button class="btn ghost sm jd-quote">${icon('spark',14)} Create quotation</button>
       <button class="btn ghost sm jd-inv">${icon('receipt',14)} Create invoice</button>
       <button class="btn ghost sm jd-mats" ${j.status==='Cancelled'?'disabled':''}>${icon('box',14)} Record materials used</button>
@@ -450,12 +551,35 @@ function openJobModal(id){
         j.technicianIds = (j.technicianIds||[]).filter(t => t !== btn.dataset.t);
         commit(); done();
       });
+      $('.jd-site').onclick = () => siteVisitModal(j.id);
       $('.jd-quote').onclick = () => { closeModal(); go('quote_edit', {jobId: j.id}); };
       $('.jd-inv').onclick = () => { closeModal(); go('invoice_new', {jobId: j.id}); };
       $('.jd-mats').onclick = () => materialsModal(j);
-      $('.jd-done').onclick = () => askConfirm(`Mark <b>${esc(j.title)}</b> as completed?`, () => { j.status='Completed'; commit(); toast(`Job ${j.ref} completed`); done(); }, {danger:false, label:'Complete job'});
-      $('.jd-hold').onclick = () => { j.status='On Hold'; commit(); done(); };
-      $('.jd-cancel').onclick = () => askConfirm(`Cancel <b>${esc(j.title)}</b>?`, () => { j.status='Cancelled'; commit(); done(); });
+      $('.jd-done').onclick = () => askConfirm(`Mark <b>${esc(j.title)}</b> as completed?`, () => { j.status='Completed'; jobLog(j, 'Job marked completed'); commit(); toast(`Job ${j.ref} completed`); done(); }, {danger:false, label:'Complete job'});
+      $('.jd-hold').onclick = () => { j.status='On Hold'; jobLog(j, 'Put on hold'); commit(); done(); };
+      $('.jd-cancel').onclick = () => askConfirm(`Cancel <b>${esc(j.title)}</b>?`, () => { j.status='Cancelled'; jobLog(j, 'Job cancelled'); commit(); done(); });
+      const jtAdd = $('#jt-add');
+      if(jtAdd) jtAdd.onclick = () => {
+        const v = $('#jt-note').value.trim();
+        if(!v) return;
+        jobLog(j, v); commit(); done();
+      };
+      const jpFile = $('#jp-file');
+      if(jpFile) jpFile.onchange = async () => {
+        const stage = $('#jp-stage').value;
+        for(const f of Array.from(jpFile.files || [])){
+          try {
+            const dataUrl = await compressImageFile(f);
+            if(!addJobPhoto(j, stage, dataUrl)) break;
+          } catch(e){ toast('Could not read ' + (f.name || 'image'), 'warn'); }
+        }
+        jpFile.value = '';
+        done();
+      };
+      $$('#jp-grid .photo-del').forEach(b => b.onclick = () => {
+        j.photos = (j.photos||[]).filter(p => p.id !== b.dataset.p);
+        commit(); done();
+      });
       $('.jd-del').onclick = () => askConfirm(`Permanently delete <b>${j.ref}</b>? This cannot be undone.`, () => {
         db.jobs = db.jobs.filter(x=>x.id!==j.id); commit(); closeModal(); reRender(); toast('Job deleted');
       });

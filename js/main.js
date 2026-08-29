@@ -9,6 +9,7 @@ const NAV = [
   ['quotes','Quotations','doc'],
   ['invoices','Invoices & Payments','receipt'],
   ['expenses','Expenses','cash'],
+  ['reports','Reports','chart'],
   ['inventory','Inventory','box'],
   ['maintenance','Maintenance','wrench'],
   ['whatsapp','WhatsApp','wa'],
@@ -85,25 +86,29 @@ function openMoreSheet(){
 function openActionsSheet(){
   sheetOpen(`
     <div class="sheet-grab"></div>
-    <div class="sheet-head"><h3>Create new</h3><button class="x" data-close>✕</button></div>
+    <div class="sheet-head"><h3>Quick add</h3><button class="x" data-close>✕</button></div>
     <div class="sheet-grid" style="grid-template-columns:1fr 1fr;padding-top:6px">
-      <button class="sheet-item" data-act="job"><span class="ic">${icon('calendar',17)}</span>Schedule job</button>
+      <button class="sheet-item" data-act="job"><span class="ic">${icon('calendar',17)}</span>New job</button>
+      <button class="sheet-item" data-act="cust"><span class="ic">${icon('users',17)}</span>New customer</button>
       <button class="sheet-item" data-act="lead"><span class="ic">${icon('userPlus',17)}</span>New lead</button>
-      <button class="sheet-item" data-act="quote"><span class="ic">${icon('spark',17)}</span>AI quotation</button>
-      <button class="sheet-item" data-act="exp"><span class="ic">${icon('cash',17)}</span>Record expense</button>
-      <button class="sheet-item" data-act="invoice"><span class="ic">${icon('receipt',17)}</span>Invoice</button>
-      <button class="sheet-item" data-act="pay"><span class="ic">${icon('cash',17)}</span>Collect payment</button>
+      <button class="sheet-item" data-act="quote"><span class="ic">${icon('spark',17)}</span>New quotation</button>
+      <button class="sheet-item" data-act="invoice"><span class="ic">${icon('receipt',17)}</span>New invoice</button>
+      <button class="sheet-item" data-act="pay"><span class="ic">${icon('cash',17)}</span>Record payment</button>
+      <button class="sheet-item" data-act="exp"><span class="ic">${icon('cash',17)}</span>Add expense</button>
+      <button class="sheet-item" data-act="site"><span class="ic">${icon('pin',17)}</span>Site visit note</button>
     </div>`);
   $('#sheet [data-close]').onclick = sheetClose;
   $$('#sheet [data-act]').forEach(b => b.onclick = () => {
     const a = b.dataset.act;
     sheetClose();
     if(a === 'job') jobModal({});
+    else if(a === 'cust') { go('customers', {}); setTimeout(()=>{ const b2 = document.getElementById('cu-new'); if(b2) b2.click(); }, 60); }
     else if(a === 'lead') go('leads', {});
     else if(a === 'quote') go('quote_edit', {});
-    else if(a === 'exp') go('expenses', {});
     else if(a === 'invoice') go('invoice_new', {});
     else if(a === 'pay') quickRecordPayment();
+    else if(a === 'exp') go('expenses', {});
+    else if(a === 'site') siteVisitModal();
   });
 }
 
@@ -111,8 +116,18 @@ function bindTop(){
   $('#top-quick-job').onclick = () => jobModal({});
   $('#top-quick-quote').onclick = () => go('quote_edit', {});
   $('#top-plus').onclick = () => openActionsSheet();
+  const bell = $('#top-bell');
+  if(bell) bell.onclick = reminderSheet;
+  const fab = $('#fab-plus');
+  if(fab) fab.onclick = () => openActionsSheet();
   $('#scrim').onclick = () => sheetClose();
   $('#top-date').textContent = fmtDateFull(isoDate(today()));
+  refreshBell();
+}
+function refreshBell(){
+  const n = reminders().length;
+  const badge = $('#bell-badge');
+  if(badge){ badge.hidden = n === 0; badge.textContent = n > 99 ? '99+' : String(n); }
 }
 
 function initApp(){
@@ -142,11 +157,17 @@ function initApp(){
   window.API = {
     get db(){ return db; },
     get ui(){ return ui; },
-    go, openModal, closeModal, toast, waLink, chip, invState, invBalance, invTotal,
+    go, openModal, closeModal, toast, commit, waLink, chip, invState, invBalance, invTotal,
     invSubtotal, invPaid, jobStage, jobNextAction, jobInvoice, jobById, reRender,
     pushOutbox, aiGenerate, quoteTotal, openJobModal, jobModal, payModal,
     guessJobType, breakdown, greeting, monthKey,
-    openMoreSheet, openActionsSheet, sheetClose
+    openMoreSheet, openActionsSheet, sheetClose,
+    reminders, reminderSheet, refreshBell, jobLog, timelineHTML,
+    openDoc, closeDoc, listAutoBackups, restoreAutoBackup, clearAutoBackups,
+    addJobPhoto, photosHTML, compressImageFile, siteVisitModal,
+    duplicateQuote, convertQuoteToJob, reportStats, reportPeriodRange,
+    quoteDocHTML: (typeof quoteDocHTML !== 'undefined') ? quoteDocHTML : null,
+    invoiceDocHTML: (typeof invoiceDocHTML !== 'undefined') ? invoiceDocHTML : null
   };
 }
 

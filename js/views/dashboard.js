@@ -90,6 +90,7 @@ VIEWS.dashboard = {
       ${kpi('Outstanding', money(outstanding), `${overdueInvs.length} overdue · ${money(overdue)}`, 'receipt','blue')}
       ${kpi('Jobs this month', jobsMonth.length, `${completedMonth.length} completed`, 'calendar','amber')}
       ${kpi('Low stock', low.length, `${db.inventory.filter(i=>i.qty<=0).length} out of stock`, 'box','violet')}
+      ${kpi('Quotations pending', money(sum(db.quotes.filter(q=>q.status==='Sent'), quoteTotal)), `${db.quotes.filter(q=>q.status==='Sent').length} awaiting approval`, 'doc','violet')}
     </div>
 
     <div class="row mb16">

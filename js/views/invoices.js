@@ -119,7 +119,7 @@ VIEWS.invoice = {
           ? `<button class="btn primary" id="inv-pay">${icon('cash',15)} Record payment</button>
              ${c && c.phone ? `<a class="btn wa" target="_blank" rel="noopener" id="inv-wa" href="${waLink(c.phone, waTemplateMsg('payment_reminder',{customer:c.name.split(' ')[0],ref:inv.ref,balance:money(st.balance),due:fmtDate(inv.due),business:db.business.name}))}">${icon('wa',14)} WhatsApp reminder</a>` : ''}`
           : `<button class="btn ghost" disabled>${icon('check',15)} Fully paid</button>`}
-        <button class="btn ghost" id="inv-print">🖨 Print</button>
+        <button class="btn ghost" id="inv-print">${icon('print',15)} PDF / print</button>
         <button class="btn danger sm" id="inv-del">${icon('trash',14)} Delete</button>
       </div>
     </div>
@@ -182,7 +182,7 @@ VIEWS.invoice = {
     const inv = invoiceById(p.id);
     if(!inv) return;
     $('#inv-back').onclick = () => go('invoices', {});
-    const pr = $('#inv-print'); if(pr) pr.onclick = () => window.print();
+    const pr = $('#inv-print'); if(pr) pr.onclick = () => openDoc('invoice', inv.id);
     const pay = () => payModal(inv);
     const b1 = $('#inv-pay'); if(b1) b1.onclick = pay;
     const b2 = $('#inv-pay2'); if(b2) b2.onclick = pay;
@@ -200,7 +200,7 @@ function payModal(inv){
       <div class="field"><label>Date</label><input type="date" class="inp" id="pay-date" value="${isoDate(today())}"></div>
       <div class="field"><label>Amount (KES)</label><input type="number" class="inp" id="pay-amt" min="0" value="${bal}"></div>
       <div class="field"><label>Method</label>
-        <select class="inp" id="pay-method"><option>M-Pesa</option><option>Cash</option><option>Bank transfer</option><option>Cheque</option></select></div>
+        <select class="inp" id="pay-method"><option>M-Pesa</option><option>Cash</option><option>Bank transfer</option><option>Card</option><option>Cheque</option><option>Other</option></select></div>
       <div class="field"><label>Reference / note</label><input class="inp" id="pay-note" placeholder="e.g. M-Pesa ref QKJ…"></div>
     </div>
     <p class="muted small" style="margin:0">Outstanding balance: <b>${money(bal)}</b></p>`,
@@ -212,9 +212,11 @@ function payModal(inv){
         const amt = parseFloat($('#pay-amt').value) || 0;
         if(amt <= 0){ toast('Enter a valid amount','warn'); return; }
         if(amt > bal + 0.5){ toast(`Amount exceeds balance (${money(bal)})`,'warn'); return; }
+        const method = $('#pay-method').value;
         inv.payments = inv.payments || [];
-        inv.payments.push({date:$('#pay-date').value || isoDate(today()), amount:amt, method:$('#pay-method').value, note:$('#pay-note').value.trim()});
+        inv.payments.push({date:$('#pay-date').value || isoDate(today()), amount:amt, method, note:$('#pay-note').value.trim()});
         if(inv.status === 'Draft') inv.status = 'Open';
+        if(inv.jobId){ const j = jobById(inv.jobId); if(j) jobLog(j, `Payment of ${money(amt)} received (${method})`); }
         const cust = customerById(inv.customerId);
         commit(); closeModal();
         if(cust && cust.phone) pushOutbox(cust, 'Payment received', waTemplateMsg('payment_received', {customer:cust.name.split(' ')[0], amount:money(amt), ref:inv.ref, business:db.business.name}));

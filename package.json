@@ -1,7 +1,7 @@
 {
   "name": "aquaflow-pms",
   "productName": "AquaFlow PMS",
-  "version": "1.3.0",
+  "version": "1.5.0",
   "description": "Offline-first plumbing business OS — desktop (Windows) + phone sync over LAN",
   "author": "VicTech Plumbing <victor@victech.co.ke>",
   "main": "electron/main.cjs",
@@ -31,7 +31,9 @@
       "package.json"
     ],
     "win": {
-      "target": ["nsis"],
+      "target": [
+        "nsis"
+      ],
       "icon": "icons/icon-512.png",
       "signAndEditExecutable": false
     },

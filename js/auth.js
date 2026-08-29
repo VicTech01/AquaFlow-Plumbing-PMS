@@ -256,8 +256,8 @@ AUTH.renderAuth = function(initialMode){
         <div class="logo-mark" style="width:44px;height:44px">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2s7 7.6 7 12a7 7 0 1 1-14 0c0-4.4 7-12 7-12z"/></svg>
         </div>
-        <h1>AquaFlow PMS</h1>
-        <p class="muted small">Your plumbing business — offline, on your network.</p>
+        <h1>AquaFlow</h1>
+        <p class="muted small">Plumbing Business OS — manage jobs, track materials, get paid, know your profit.</p>
       </div>
       <div class="auth-tabs">
         <button id="au-tab-in" class="active">Sign in</button>

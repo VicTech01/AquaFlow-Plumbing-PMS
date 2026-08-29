@@ -332,6 +332,9 @@ function renderStatusCard(){
       ${qe.status==='Draft' ? btn('qs-send','primary',icon('send',14),'Mark sent') : ''}
       ${qe.status==='Sent' ? btn('qs-approve','green',icon('check',14),'Mark approved') + btn('qs-decline','ghost',icon('x',14),'Declined') : ''}
       ${qe.status==='Approved' ? btn('qs-convert','primary',icon('receipt',14),'Convert to invoice') : ''}
+      ${!qe.jobId ? btn('qs-job','ghost',icon('calendar',14),'Convert to job') : ''}
+      ${btn('qs-dup','ghost',icon('copy',14),'Duplicate')}
+      ${btn('qs-pdf','ghost',icon('print',14),'PDF / print')}
       ${c && c.phone && ['Sent','Approved'].includes(qe.status) ? `<a class="btn wa sm" target="_blank" rel="noopener" href="${waLink(c.phone, waTemplateMsg('quote_sent',{customer:c.name.split(' ')[0],ref:qe.ref,total:money(quoteTotal(qe)),title:qe.title||'works',valid:fmtDate(qe.validUntil),business:db.business.name}))}">${icon('wa',14)} WhatsApp</a>` : ''}
       <button class="btn ghost sm qs-del">${icon('trash',14)}</button>
     </div>`;
@@ -345,9 +348,53 @@ function renderStatusCard(){
   const qsAppr = $('#qs-approve');if(qsAppr) qsAppr.onclick = () => { qe.status='Approved'; commit(); toast('Quotation approved'); reRender(); };
   const qsDecl = $('#qs-decline');if(qsDecl) qsDecl.onclick = () => { qe.status='Declined'; commit(); reRender(); };
   const qsConv = $('#qs-convert');if(qsConv) qsConv.onclick = () => convertQuoteToInvoice(qe);
+  const qsJob  = $('#qs-job');    if(qsJob) qsJob.onclick = () => convertQuoteToJob(qe);
+  const qsDup  = $('#qs-dup');    if(qsDup) qsDup.onclick = () => duplicateQuote(qe);
+  const qsPdf  = $('#qs-pdf');    if(qsPdf) qsPdf.onclick = () => openDoc('quote', qe.id);
   const qsDel  = $('#qs-del');    if(qsDel) qsDel.onclick = () => askConfirm(`Delete quotation <b>${qe.ref}</b>?`, () => {
     db.quotes = db.quotes.filter(x=>x.id!==qe.id); commit(); go('quotes',{}); toast('Quotation deleted');
   });
+}
+
+function duplicateQuote(q){
+  const copy = JSON.parse(JSON.stringify(q));
+  copy.id = null;
+  copy.ref = null;
+  copy.status = 'Draft';
+  copy.createdAt = isoDate(today());
+  copy.jobId = null;
+  copy.validUntil = isoDate(addDays(today(), 14));
+  copy.ai = null;
+  delete copy.timeline;
+  const title = copy.title ? copy.title : '';
+  copy.title = title ? `${title} (copy)` : '(copy)';
+  const id = uid('q');
+  db.quotes.unshift(Object.assign(copy, {id, ref: nextRef('quote')}));
+  commit();
+  toast(`Duplicated as draft ${copy.ref}`);
+  go('quote_edit', {id});
+}
+
+function convertQuoteToJob(q){
+  if(q.jobId){ toast('Already linked to a job','warn'); return; }
+  const c = customerById(q.customerId);
+  const laborHrs = sum(q.items.filter(i=>i.kind==='Labor'), i=>i.qty) || 2;
+  const job = {
+    id: uid('j'), ref: nextRef('job'),
+    customerId: q.customerId, title: q.title || 'Quoted works',
+    type: (typeof guessJobType === 'function' ? guessJobType(q.title||'') : null) || 'Installation',
+    priority: 'Medium', date: isoDate(today()), start: '09:00', hours: Math.max(1, Math.round(laborHrs)),
+    status: 'Scheduled', address: c ? (c.address||'') : '', notes: `Converted from quotation ${q.ref}`,
+    technicianIds: [], createdAt: isoDate(today())
+  };
+  db.jobs.push(job);
+  q.jobId = job.id;
+  const stored = quoteById(q.id);
+  if(stored) stored.jobId = job.id;
+  jobLog(job, `Created from quotation ${q.ref} (${money(quoteTotal(q))})`);
+  commit();
+  toast(`Job ${job.ref} created from ${q.ref} — assign a crew in Dispatch`);
+  go('jobs', {});
 }
 
 function convertQuoteToInvoice(q){
@@ -361,6 +408,7 @@ function convertQuoteToInvoice(q){
   };
   db.invoices.unshift(inv);
   q.status = 'Converted';
+  if(q.jobId){ const j = jobById(q.jobId); if(j) jobLog(j, `Invoice ${inv.ref} created from quotation ${q.ref}`); }
   const warns = consumeStock(inv, items);
   if(cust) pushOutbox(cust, 'Invoice sent', waTemplateMsg('invoice_sent', {
     customer:cust.name.split(' ')[0], ref:inv.ref, total:money(invTotal(inv)),
