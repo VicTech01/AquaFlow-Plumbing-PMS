@@ -70,7 +70,8 @@ Or open `index.html` directly in a browser (data persists via localStorage).
 | **Maintenance Reminders** | Recurring plans per customer & equipment, due-date engine, "schedule job" prefill, WhatsApp reminder, mark-done rolls the date forward |
 | **WhatsApp Notifications** | Outbox of every composed message (dispatch, quote sent, invoice, payment received, reminder, maintenance). Pre-filled `wa.me` chats — no Business API needed. Copy / mark-sent / clear. All templates editable in Settings |
 | **Sync & Devices** | Offline-first multi-device sync: Wi-Fi sync with any other AquaFlow device (pull / full-pull / full-push / merge), the desktop's built-in LAN sharing server (phones install from it), offline file export/import (merge, never wipe), per-device record counts, last-change/last-sync status |
-| **Settings** | Business profile (**owner name** — powers the dashboard greeting), labor rates, travel fees, VAT, ref prefixes, WhatsApp templates, JSON export/import backup, demo-data reset |
+| **Settings** | Business profile (**owner name** — powers the dashboard greeting), labor rates, travel fees, VAT, ref prefixes, WhatsApp templates, JSON export/import backup, demo-data reset, **Team** (add/edit/enable/disable/delete technicians), **Account & security** (change password / security question, sign out, switch or delete local accounts) |
+| **Sign in / Sign up** | Local (offline) accounts with per-account data isolation, PBKDF2-hashed passwords, guest mode, and forgot-password via security question — see [Accounts & security](#accounts--security-offline) |
 
 ### The full pipeline
 
@@ -95,15 +96,26 @@ Lead → Quotation → Scheduled → In Progress → Completed → Invoiced → 
 - **Responsive tables & kanban**: columns collapse at 820px/560px; pipeline stepper hides stage labels except the current one
 - 2-up KPI grid, stacked forms, larger touch targets for checkboxes
 
+## Accounts & security (offline)
+
+The app is 100% offline, so accounts are **local to the device** — no email is ever sent, nothing leaves the device.
+
+- **Sign up / sign in** — create an account with name + email + password, or continue as **guest** (the original local demo workspace, unchanged).
+- **Per-account data isolation** — each account owns its own database (`aquaflow_pms_v1:<email>` in localStorage). Guest keeps the legacy `aquaflow_pms_v1` key. Accounts never see each other's data. New accounts start with a clean business workspace (zeroed counters, default templates & KES rates, no demo data) — plus a Team section in Settings so you can add your technicians before dispatching.
+- **Password storage** — PBKDF2-SHA256 (40,000 iterations, per-account random salt), implemented in pure JS (`js/auth.js`) and cross-verified against `node:crypto` in tests. Only salt + hash are stored; the password is never saved.
+- **Forgot password** — answer the **security question** you chose at sign-up to set a new password, entirely on-device. (A real emailed reset link would require a backend, which breaks the fully-offline design — the security-question flow is the offline-correct equivalent.)
+- **Session** — remembered per device until you sign out (Settings → Account & security, where you can also change your password, change your security question, or delete a local account and its data).
+
 ## Data & testing
 
-- Demo data (12 Nairobi customers, 4 technicians, **18 jobs incl. solar installs**, 6 quotes, 11 invoices, **5 leads across the funnel**, **15 expenses across 3 months**, 30 stock items incl. a full solar line, 6 maintenance plans) is seeded on first run — relative to today, so the calendar is always alive.
+- Demo data (12 Nairobi customers, 4 technicians, **18 jobs incl. solar installs**, 6 quotes, 11 invoices, **5 leads across the funnel**, **15 expenses across 3 months**, 30 stock items incl. a full solar line, 6 maintenance plans) is seeded on first run — relative to today, so the calendar is always alive. New accounts get a clean workspace instead.
 - **`smoke.js`** — 14 runtime tests (rendering, math, AI engine, WA links, state machine).
 - **`smoke2.js`** — 11 interactive UI tests simulating real clicks through every save flow.
 - **`smoke3.js`** — 8 tests for round-3 features (solar scopes, type filter, mobile sheets, tab bar).
 - **`smoke4.js`** — 15 business-OS tests: P&L math, pipeline stages + next actions, lead→customer/quote/job flows, expense totals, materials stock deduction + auto-billing, breakdown consistency, customer revenue history.
 - **`smoke5.js`** — 19 sync/offline tests: merge engine (union, last-write-wins, tombstones, counters), live LAN server (health, sync round-trip, static + PWA serving, state persistence), in-app stamping.
-- Run all: `node smoke.js && node smoke2.js && node smoke3.js && node smoke4.js && node smoke5.js` (67 tests)
+- **`smoke6.js`** — 17 accounts tests: SHA-256/PBKDF2 vs `node:crypto` (FIPS vectors + random salts), sign-up, wrong-password, forgot-password via security question, password change, per-account data isolation, delete account, guest key, and full jsdom UI flows (auth screen → create → app → sign out → forgot → reset → sign in).
+- Run all: `NODE_PATH=/usr/local/node_modules node smoke.js && … && node smoke6.js` (84 tests)
 
 ## Structure
 
@@ -116,6 +128,7 @@ css/styles.css        design system
 js/utils.js           date / money / DOM helpers
 js/seed.js            demo data + AI pricing catalog
 js/sync.js            sync core: merge engine (UMD — browser + Node)
+js/auth.js            accounts: pure-JS SHA-256/HMAC/PBKDF2, local account store, per-profile storage, auth screen
 js/app.js             state, storage, modals, charts, WA helpers, line-item editor, pipeline engine, change-stamping
 js/lan-server.cjs     LAN sync server (pure Node — used by the desktop app, tested directly)
 js/views/*.js         one file per module (incl. sync.js = Sync & Devices)

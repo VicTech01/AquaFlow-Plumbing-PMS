@@ -293,6 +293,22 @@ label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bot
   .checks input{transform:scale(1.15);margin-right:2px}
 }
 
+/* ---------- auth screen ---------- */
+body.preauth .layout, body.preauth #tabbar, body.preauth #scrim, body.preauth #sheet { display: none !important; }
+.auth-screen{position:fixed;inset:0;z-index:100;background:linear-gradient(150deg,#0d1b2a 0%,#10293f 45%,#0b4a6f 100%);display:grid;place-items:center;padding:20px;overflow-y:auto}
+.auth-wrap{width:100%;max-width:430px;display:flex;flex-direction:column;gap:14px}
+.auth-card{background:#fff;border-radius:18px;box-shadow:0 24px 60px rgba(2,8,20,.45);padding:28px 26px}
+.auth-brand{text-align:center;margin-bottom:18px}
+.auth-brand .logo-mark{margin:0 auto 10px;background:linear-gradient(135deg,#0ea5e9,#0369a1)}
+.auth-brand h1{font-size:21px;margin:0 0 4px;font-weight:800}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;background:#f1f5f9;border-radius:11px;padding:4px;margin-bottom:16px}
+.auth-tabs button{border:none;background:transparent;padding:9px 8px;border-radius:8px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
+.auth-tabs button.active{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(13,27,42,.12)}
+.auth-div{display:flex;align-items:center;gap:10px;color:#94a3b8;font-size:11px;margin:14px 0}
+.auth-div::before,.auth-div::after{content:'';flex:1;height:1px;background:var(--line)}
+.auth-foot{text-align:center}
+@media (max-width:480px){ .auth-card{padding:22px 18px;border-radius:14px} }
+
 /* ---------- business OS: greeting, pipeline, kanban, breakdowns ---------- */
 .greet{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px;padding:16px 18px;background:linear-gradient(135deg,#0d1b2a 0%,#12314e 55%,#0b4a6f 100%);color:#fff}
 .greet .greet-h{font-size:21px;font-weight:800;margin:0 0 4px;letter-spacing:.01em}

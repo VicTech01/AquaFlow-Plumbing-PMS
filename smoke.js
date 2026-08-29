@@ -4,14 +4,15 @@ const fs = require('fs');
 const path = require('path');
 const { JSDOM } = require('jsdom');
 
-const files = ['js/utils.js','js/seed.js','js/sync.js','js/app.js',
+const files = ['js/utils.js','js/seed.js','js/sync.js','js/auth.js','js/app.js',
   'js/views/dashboard.js','js/views/leads.js','js/views/jobs.js','js/views/dispatch.js','js/views/customers.js',
   'js/views/quotes.js','js/views/invoices.js','js/views/expenses.js','js/views/inventory.js','js/views/maintenance.js',
-  'js/views/whatsapp.js','js/views/settings.js','js/main.js'];
+  'js/views/whatsapp.js','js/views/sync.js','js/views/settings.js','js/main.js'];
 
 const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
 const dom = new JSDOM(html, { url: 'http://localhost/', runScripts: 'outside-only', pretendToBeVisual: true });
 const { window } = dom;
+dom.window.localStorage.setItem('aquaflow_session_v1','guest'); // skip auth gate, test the app
 const errors = [];
 window.addEventListener('error', e => errors.push('window error: ' + (e.message || e.error)));
 

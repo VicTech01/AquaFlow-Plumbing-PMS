@@ -4,8 +4,8 @@
    last-write-wins per record, tombstones for deletions, counters take the max. */
 (function (root, factory) {
   if (typeof module !== 'undefined' && module.exports) module.exports = factory();
-  else root.SyncCore = factory();
-})(typeof self !== 'undefined' ? self : this, function () {
+  else if (root) root.SyncCore = factory();
+})(typeof self !== 'undefined' ? self : (typeof window !== 'undefined' ? window : this), function () {
   'use strict';
 
   var SYNC_COLLECTIONS = ['customers', 'technicians', 'jobs', 'quotes', 'invoices', 'inventory', 'maintenance', 'outbox', 'leads', 'expenses'];

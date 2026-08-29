@@ -20,6 +20,9 @@ VIEWS.settings = {
       maintenance_due:'Maintenance due reminder', job_complete:'Job completed'
     };
     const num = (id, v) => `<input type="number" class="inp" id="${id}" min="0" value="${v}">`;
+    const sess = (typeof AUTH !== 'undefined') ? AUTH.session() : 'guest';
+    const acc = sess && sess !== 'guest' ? AUTH.byEmail(sess) : null;
+    const accounts = (typeof AUTH !== 'undefined') ? AUTH.accounts() : [];
     return `
     <div class="grid2">
       <div class="stack">
@@ -49,6 +52,52 @@ VIEWS.settings = {
             <div class="field"><label>Quote ref prefix</label><input class="inp" id="st-p2" value="${esc(b.prefixes.quote)}"></div>
             <div class="field span2"><label>Invoice ref prefix</label><input class="inp" id="st-p3" value="${esc(b.prefixes.invoice)}"></div>
           </div>
+        </div>
+        <div class="card">
+          <h3>${icon('users',15)} Team</h3>
+          ${db.technicians.length ? `<div class="tbl-wrap"><table class="tbl">
+            <thead><tr><th>Name</th><th class="resp-sm">Role</th><th class="resp-sm">Phone</th><th class="num resp-sm">Rate</th><th>Skills</th><th></th></tr></thead>
+            <tbody>
+              ${db.technicians.map(t => `<tr>
+                <td class="bold">${esc(t.name)}</td>
+                <td class="resp-sm"><span class="chip c-gray">${esc(t.role)}</span></td>
+                <td class="resp-sm">${esc(t.phone||'—')}</td>
+                <td class="num resp-sm">${money(t.rate)}</td>
+                <td class="resp-md small muted">${esc((t.skills||[]).join(', ')||'—')}</td>
+                <td class="row" style="justify-content:flex-end">
+                  <button class="btn ghost sm" data-ted="${t.id}">✎</button>
+                  <button class="btn ghost sm" data-tact="${t.id}">${t.active?'Disable':'Enable'}</button>
+                  <button class="btn danger sm" data-tdel="${t.id}">✕</button>
+                </td>
+              </tr>`).join('')}
+            </tbody>
+          </table></div>` : '<div class="empty small">No technicians yet — add your team (yourself counts!).</div>'}
+          <button class="btn ghost sm mt12" id="st-tech-add">${icon('plus',14)} Add technician</button>
+        </div>
+        <div class="card">
+          <h3>${icon('gear',15)} Account &amp; security</h3>
+          ${acc ? `
+          <div class="spread" style="padding:4px 0">
+            <div><b>${esc(acc.name)}</b><div class="muted small">${esc(acc.email)} · signed in</div></div>
+            <span class="chip c-green">Active</span>
+          </div>
+          <div class="row mt8" style="flex-wrap:wrap">
+            <button class="btn ghost sm" id="st-pw">${icon('gear',14)} Change password</button>
+            <button class="btn ghost sm" id="st-sq">${icon('gear',14)} Change security question</button>
+            <button class="btn ghost sm" id="st-out">Sign out</button>
+          </div>
+          ${accounts.length > 1 ? `
+          <div class="muted small mt12">Other accounts on this device:</div>
+          ${accounts.filter(a => a.email !== acc.email).map(a => `
+            <div class="spread" style="padding:5px 0;border-top:1px dashed #eef2f7">
+              <div><b class="small">${esc(a.name)}</b><div class="subrow">${esc(a.email)}</div></div>
+              <div class="row" style="gap:6px">
+                <button class="btn ghost sm" data-acc-switch="${esc(a.email)}">Switch</button>
+                <button class="btn danger sm" data-acc-del="${esc(a.email)}">Delete</button>
+              </div>
+            </div>`).join('')}` : ''}` : `
+          <div class="badge-info">You're in <b>guest mode</b> — data lives in the local demo workspace, no password. Create an account to protect your business data with email + password.</div>
+          <button class="btn primary sm mt12" id="st-create-acc">${icon('userPlus',14)} Create an account</button>`}
         </div>
         <div class="card">
           <h3>${icon('box',15)} Data</h3>
@@ -94,7 +143,7 @@ VIEWS.settings = {
       b.rates = {standard:n('#st-rate1'), senior:n('#st-rate2'), apprentice:n('#st-rate3')};
       b.vatRate = n('#st-vat'); b.dueDays = n('#st-due');
       b.travel = {city:n('#st-tr1'), outskirts:n('#st-tr2'), county:n('#st-tr3')};
-      b.prefixes = {job:$('#st-p1').value.trim()||'JOB', quote:$('#st-p2').value.trim()||'QUO', invoice:$('#st-p3').value.trim()||'INV'};
+      b.prefixes = {job:$('#st-p1').value.trim()||'JOB', quote:$('#st-p2').value.trim()||'QUO', invoice:$('#st-p3').value.trim()||'INV', lead:b.prefixes.lead||'LEAD'};
       $$('.st-tpl').forEach(t => { b.templates[t.dataset.k] = t.value; });
       commit();
       $('#side-foot').innerHTML = sideFootHTML();
@@ -129,9 +178,125 @@ VIEWS.settings = {
       $('#side-foot').innerHTML = sideFootHTML();
       toast('Demo data restored');
     }, {label:'Reset everything'});
+
+    /* ---- team ---- */
+    $('#st-tech-add').onclick = () => techModal(null);
+    $$('#content [data-ted]').forEach(b => b.onclick = () => techModal(db.technicians.find(t => t.id === b.dataset.ted)));
+    $$('#content [data-tact]').forEach(b => b.onclick = () => {
+      const t = db.technicians.find(x => x.id === b.dataset.tact);
+      if(t){ t.active = !t.active; commit(); reRender(); toast(`${t.name} ${t.active?'enabled':'disabled'}`); }
+    });
+    $$('#content [data-tdel]').forEach(b => b.onclick = () => {
+      const t = db.technicians.find(x => x.id === b.dataset.tdel);
+      if(!t) return;
+      askConfirm(`Remove <b>${esc(t.name)}</b> from the team? Their past jobs are kept.`, () => {
+        db.technicians = db.technicians.filter(x => x.id !== t.id);
+        db.jobs.forEach(j => j.technicianIds = (j.technicianIds||[]).filter(x => x !== t.id));
+        commit(); reRender(); toast('Technician removed');
+      });
+    });
+
+    /* ---- account & security ---- */
+    if($('#st-pw')) $('#st-pw').onclick = () => {
+      openModal('Change password', `
+        <div class="field"><label>Current password</label><input class="inp" id="pw-old" type="password"></div>
+        <div class="field"><label>New password</label><input class="inp" id="pw-new" type="password" placeholder="At least 6 characters"></div>
+        <div class="field"><label>Confirm new password</label><input class="inp" id="pw-new2" type="password"></div>
+        <div id="pw-msg"></div>`,
+        { width:'sm', footerHtml:`<button class="btn ghost" id="pw-x">Cancel</button><button class="btn primary" id="pw-go">Change password</button>`,
+          onMount(){
+            $('#pw-x').onclick = closeModal;
+            $('#pw-go').onclick = () => {
+              const n1 = $('#pw-new').value, n2 = $('#pw-new2').value;
+              if(n1 !== n2){ $('#pw-msg').innerHTML = '<div class="bad small">New passwords do not match.</div>'; return; }
+              const r = AUTH.changePassword(AUTH.session(), $('#pw-old').value, n1);
+              if(!r.ok){ $('#pw-msg').innerHTML = `<div class="bad small">${esc(r.error)}</div>`; return; }
+              closeModal(); toast('Password changed');
+            };
+          }});
+    };
+    if($('#st-sq')) $('#st-sq').onclick = () => {
+      openModal('Change security question', `
+        <div class="field"><label>Question</label>
+          <select class="inp" id="sq-q">${SEC_QUESTIONS.map(q=>`<option ${q===AUTH.byEmail(AUTH.session()).sq?'selected':''}>${q}</option>`).join('')}</select></div>
+        <div class="field"><label>New answer</label><input class="inp" id="sq-a" placeholder="Used to reset a forgotten password"></div>`,
+        { width:'sm', footerHtml:`<button class="btn ghost" id="sq-x">Cancel</button><button class="btn primary" id="sq-go">Save</button>`,
+          onMount(){
+            $('#sq-x').onclick = closeModal;
+            $('#sq-go').onclick = () => {
+              const r = AUTH.changeSecurityQuestion(AUTH.session(), $('#sq-q').value, $('#sq-a').value);
+              if(!r.ok){ toast(r.error, 'warn'); return; }
+              closeModal(); toast('Security question updated');
+            };
+          }});
+    };
+    if($('#st-out')) $('#st-out').onclick = () => {
+      AUTH.signOut();
+      closeModal();
+      AUTH.renderAuth();
+    };
+    if($('#st-create-acc')) $('#st-create-acc').onclick = () => {
+      AUTH.renderAuth('up');
+    };
+    $$('#content [data-acc-switch]').forEach(b => b.onclick = () => {
+      const email = b.dataset.accSwitch;
+      AUTH.signIn(email);
+      db = DB.load();
+      if(!db){
+        const a = AUTH.byEmail(email);
+        db = emptyDb(a ? a.name : 'Boss');
+        DB.save();
+      }
+      initChangeTracking();
+      go('dashboard', {});
+      toast(`Signed in as ${AUTH.byEmail(email)?.name || email}`);
+    });
+    $$('#content [data-acc-del]').forEach(b => b.onclick = () => {
+      const email = b.dataset.accDel;
+      const a = AUTH.byEmail(email);
+      askConfirm(`Delete account <b>${esc(a?a.name:email)}</b> and ALL of its data on this device?`, () => {
+        AUTH.deleteAccount(email);
+        reRender();
+        toast('Account deleted');
+      }, {label:'Delete account'});
+    });
   }
 };
 function dbCheckKeys(d){ return ['customers','technicians','jobs','quotes','invoices','inventory','maintenance','outbox','business','counters'].every(k=>k in d); }
+
+/* ---- technician modal ---- */
+function techModal(tech){
+  const isE = !!tech;
+  openModal(isE ? `Edit technician — ${esc(tech.name)}` : 'Add technician', `
+    <div class="form-grid">
+      <div class="field span2"><label>Name *</label><input class="inp" id="tf-name" value="${esc(tech?tech.name:'')}" placeholder="e.g. Brian Otieno"></div>
+      <div class="field"><label>Phone</label><input class="inp" id="tf-phone" value="${esc(tech?tech.phone:'')}" placeholder="07xx xxx xxx"></div>
+      <div class="field"><label>Role</label>
+        <select class="inp" id="tf-role">
+          ${['Apprentice','Standard','Senior'].map(r=>`<option ${tech&&tech.role===r?'selected':''}>${r}</option>`).join('')}
+        </select></div>
+      <div class="field"><label>Rate (KES/hour) *</label><input class="inp" id="tf-rate" type="number" min="0" step="50" value="${tech?tech.rate:db.business.rates.standard}"></div>
+      <div class="field"><label>Skills (comma-separated)</label><input class="inp" id="tf-skills" value="${esc(tech?(tech.skills||[]).join(', '):'')}" placeholder="Geyser & heating, Drains, Solar install"></div>
+    </div>`,
+  { width:'md',
+    footerHtml:`<button class="btn ghost" id="tf-x">Cancel</button><button class="btn primary" id="tf-save">${isE?'Save changes':'Add technician'}</button>`,
+    onMount(){
+      $('#tf-x').onclick = closeModal;
+      $('#tf-save').onclick = () => {
+        const name = $('#tf-name').value.trim();
+        const rate = parseFloat($('#tf-rate').value) || 0;
+        if(!name || rate <= 0){ toast('Name and rate are required','warn'); return; }
+        const data = {
+          name, phone: $('#tf-phone').value.trim(), role: $('#tf-role').value, rate,
+          skills: $('#tf-skills').value.split(',').map(s=>s.trim()).filter(Boolean)
+        };
+        if(isE){ Object.assign(tech, data); toast(`${name} updated`); }
+        else { db.technicians.push(Object.assign({id:uid('t'), active:true, hoursPerDay:8}, data)); toast(`${name} added to the team`); }
+        commit(); closeModal(); reRender();
+      };
+    }
+  });
+}
 function sideFootHTML(){
   return `<b>${esc(db.business.name)}</b>${esc(db.business.phone)}<br>${esc(db.business.address)}${db.memoryMode?'<span class="mem-badge">DEMO MODE — not persisted</span>':''}`;
 }

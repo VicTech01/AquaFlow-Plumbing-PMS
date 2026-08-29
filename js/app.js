@@ -5,15 +5,16 @@ let ui = { view:'dashboard', params:{} };
 
 const DB = {
   key: 'aquaflow_pms_v1',
+  currentKey(){ return (typeof AUTH !== 'undefined') ? AUTH.dbKey(AUTH.session() || 'guest') : this.key; },
   load(){
     try{
-      const raw = localStorage.getItem(this.key);
+      const raw = localStorage.getItem(this.currentKey());
       if(raw){ const d = JSON.parse(raw); if(d && d.v === 1) return d; }
     }catch(e){}
     return null;
   },
   save(){
-    try{ localStorage.setItem(this.key, JSON.stringify(db)); }
+    try{ localStorage.setItem(this.currentKey(), JSON.stringify(db)); }
     catch(e){ if(db) db.memoryMode = true; }
   },
   seed(){ const d = makeSeed(); db = d; this.save(); return d; },

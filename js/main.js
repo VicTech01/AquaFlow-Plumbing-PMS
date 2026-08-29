@@ -150,5 +150,4 @@ function initApp(){
   };
 }
 
-if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initApp);
-else initApp();
+/* boot is handled by js/auth.js (account gate) → initApp() */
