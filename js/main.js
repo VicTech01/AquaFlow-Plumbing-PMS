@@ -17,26 +17,83 @@ const NAV = [
   ['settings','Settings','gear']
 ];
 
+const CUSTOMER_NAV = [
+  ['cust_dash','Overview','dashboard'],
+  ['cust_quotes','My quotes','doc'],
+  ['cust_invoices','My invoices','receipt'],
+  ['cust_jobs','My jobs','calendar'],
+  ['cust_help','Help & contact','chat']
+];
+
 function buildNav(){
+  if(isCustomerSession()){
+    $('#nav').innerHTML = CUSTOMER_NAV.map(([v,label,ic]) =>
+      `<a data-view="${v}">${icon(ic,17)}<span>${label}</span></a>`).join('') +
+      `<a id="nav-signout" data-csignout>${icon('back',17)}<span>Sign out</span></a>`;
+    $$('#nav a[data-view]').forEach(a => a.onclick = () => go(a.dataset.view, {}));
+    const so = $('#nav-signout');
+    if(so) so.onclick = customerSignOut;
+    return;
+  }
   $('#nav').innerHTML = NAV.map(([v,label,ic]) =>
     `<a data-view="${v}">${icon(ic,17)}<span>${label}</span></a>`).join('');
   $$('#nav a').forEach(a => a.onclick = () => go(a.dataset.view, {}));
 }
 
 function buildTabbar(){
-  const items = [
-    ['dashboard','Home','dashboard'],
-    ['jobs','Jobs','calendar'],
-    ['dispatch','Dispatch','truck'],
-    ['customers','Customers','users'],
-    ['more','More','spark']
-  ];
+  let items;
+  if(isCustomerSession()){
+    items = [
+      ['cust_dash','Home','dashboard'],
+      ['cust_quotes','Quotes','doc'],
+      ['cust_invoices','Invoices','receipt'],
+      ['cust_jobs','Jobs','calendar'],
+      ['cust_help','Help','chat']
+    ];
+  } else {
+    items = [
+      ['dashboard','Home','dashboard'],
+      ['jobs','Jobs','calendar'],
+      ['dispatch','Dispatch','truck'],
+      ['customers','Customers','users'],
+      ['more','More','spark']
+    ];
+  }
   $('#tabbar').innerHTML = items.map(([v,l,ic]) =>
     `<button data-tab="${v}">${icon(ic,20)}<span>${l}</span></button>`).join('');
   $$('#tabbar button').forEach(b => b.onclick = () => {
     if(b.dataset.tab === 'more'){ openMoreSheet(); return; }
     go(b.dataset.tab, {});
   });
+}
+
+/* ---------- role-aware session switching ---------- */
+function customerSignOut(){
+  AUTH.signOut();
+  document.body.classList.remove('app-customer');
+  AUTH.renderAuth();
+}
+function switchToSession(email){
+  AUTH.signIn(email);
+  AUTH.hideAuth();
+  const role = AUTH.role(email);
+  if(role === 'customer'){
+    db = DB.loadFor(email) || db || DB.load();
+  } else {
+    db = DB.load();
+    if(!db){
+      const a = AUTH.byEmail(email);
+      db = emptyDb(a ? a.name : 'Boss');
+      DB.save();
+    }
+  }
+  window.__AF_SESSION = email;
+  document.body.classList.toggle('app-customer', role === 'customer');
+  buildNav();
+  buildTabbar();
+  initChangeTracking();
+  go(role === 'customer' ? 'cust_dash' : 'dashboard', {});
+  toast(`Signed in as ${AUTH.byEmail(email)?.name || email} (${role})`);
 }
 
 function badge(n, cls){ return n ? `<span class="chip c-${cls||'amber'}">${n}</span>` : ''; }
@@ -117,7 +174,10 @@ function bindTop(){
   $('#top-quick-quote').onclick = () => go('quote_edit', {});
   $('#top-plus').onclick = () => openActionsSheet();
   const bell = $('#top-bell');
-  if(bell) bell.onclick = reminderSheet;
+  if(bell){
+    bell.style.display = isCustomerSession() ? 'none' : 'grid';
+    bell.onclick = reminderSheet;
+  }
   const fab = $('#fab-plus');
   if(fab) fab.onclick = () => openActionsSheet();
   $('#scrim').onclick = () => sheetClose();
@@ -125,6 +185,7 @@ function bindTop(){
   refreshBell();
 }
 function refreshBell(){
+  if(isCustomerSession()) return;
   const n = reminders().length;
   const badge = $('#bell-badge');
   if(badge){ badge.hidden = n === 0; badge.textContent = n > 99 ? '99+' : String(n); }
@@ -133,6 +194,10 @@ function refreshBell(){
 function initApp(){
   if(db) return;
   db = DB.load();
+  // customer portal: read the shared business database this device holds
+  if(!db && typeof AUTH !== 'undefined' && AUTH.role() === 'customer'){
+    db = DB.loadFor(AUTH.session());
+  }
   // desktop: restore from the on-disk database file if browser storage is empty
   if(!db && window.__AQUAFLOW && window.__AQUAFLOW.loadPersisted && typeof SyncCore !== 'undefined'){
     try {
@@ -149,11 +214,12 @@ function initApp(){
   if(window.__AQUAFLOW && window.__AQUAFLOW.onDbChanged){
     window.__AQUAFLOW.onDbChanged(j => DB.adoptIncoming(j, {toastNote:'Synced new changes from another device'}));
   }
+  document.body.classList.toggle('app-customer', isCustomerSession());
   buildNav();
   buildTabbar();
   bindTop();
   $('#side-foot').innerHTML = sideFootHTML();
-  go('dashboard', {});
+  go(isCustomerSession() ? 'cust_dash' : 'dashboard', {});
   window.API = {
     get db(){ return db; },
     get ui(){ return ui; },
@@ -167,7 +233,9 @@ function initApp(){
     addJobPhoto, photosHTML, compressImageFile, siteVisitModal,
     duplicateQuote, convertQuoteToJob, reportStats, reportPeriodRange,
     quoteDocHTML: (typeof quoteDocHTML !== 'undefined') ? quoteDocHTML : null,
-    invoiceDocHTML: (typeof invoiceDocHTML !== 'undefined') ? invoiceDocHTML : null
+    invoiceDocHTML: (typeof invoiceDocHTML !== 'undefined') ? invoiceDocHTML : null,
+    bindPwToggles, isCustomerSession, myCustomer, switchToSession, customerSignOut,
+    scanMostRecentKey: DB.scanMostRecentKey, loadFor: DB.loadFor
   };
 }
 

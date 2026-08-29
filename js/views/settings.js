@@ -85,7 +85,7 @@ VIEWS.settings = {
           ${acc ? `
           <div class="spread" style="padding:4px 0">
             <div><b>${esc(acc.name)}</b><div class="muted small">${esc(acc.email)} · signed in</div></div>
-            <span class="chip c-green">Active</span>
+            <span class="row" style="gap:6px"><span class="chip c-${(acc.role||'admin')==='customer'?'teal':'indigo'}">${(acc.role||'admin')==='customer'?'👤 Customer':'👷 Admin'}</span><span class="chip c-green">Active</span></span>
           </div>
           <div class="row mt8" style="flex-wrap:wrap">
             <button class="btn ghost sm" id="st-pw">${icon('gear',14)} Change password</button>
@@ -251,12 +251,13 @@ VIEWS.settings = {
     /* ---- account & security ---- */
     if($('#st-pw')) $('#st-pw').onclick = () => {
       openModal('Change password', `
-        <div class="field"><label>Current password</label><input class="inp" id="pw-old" type="password"></div>
+        <div class="field"><label>Current password</label><input class="inp" id="pw-old" type="password" autocomplete="current-password"></div>
         <div class="field"><label>New password</label><input class="inp" id="pw-new" type="password" placeholder="At least 6 characters"></div>
         <div class="field"><label>Confirm new password</label><input class="inp" id="pw-new2" type="password"></div>
         <div id="pw-msg"></div>`,
         { width:'sm', footerHtml:`<button class="btn ghost" id="pw-x">Cancel</button><button class="btn primary" id="pw-go">Change password</button>`,
           onMount(){
+            if(typeof bindPwToggles === 'function') bindPwToggles($('#modal-root'));
             $('#pw-x').onclick = closeModal;
             $('#pw-go').onclick = () => {
               const n1 = $('#pw-new').value, n2 = $('#pw-new2').value;
@@ -291,17 +292,7 @@ VIEWS.settings = {
       AUTH.renderAuth('up');
     };
     $$('#content [data-acc-switch]').forEach(b => b.onclick = () => {
-      const email = b.dataset.accSwitch;
-      AUTH.signIn(email);
-      db = DB.load();
-      if(!db){
-        const a = AUTH.byEmail(email);
-        db = emptyDb(a ? a.name : 'Boss');
-        DB.save();
-      }
-      initChangeTracking();
-      go('dashboard', {});
-      toast(`Signed in as ${AUTH.byEmail(email)?.name || email}`);
+      switchToSession(b.dataset.accSwitch);
     });
     $$('#content [data-acc-del]').forEach(b => b.onclick = () => {
       const email = b.dataset.accDel;

@@ -1,10 +1,10 @@
 /* AquaFlow PMS — service worker (phone PWA offline support).
-   v15 — FIX: navigation requests are network-first so a new deployment reaches
+   v16 — navigation requests are network-first so a new deployment reaches
    returning users immediately; the cache version is bumped on every change to
    the shell so stale installs self-heal on the next load.
    Sync/API traffic is never cached — it is live data. */
 'use strict';
-const CACHE = 'aquaflow-shell-v15';
+const CACHE = 'aquaflow-shell-v16';
 const SHELL = [
   './',
   './index.html',
@@ -24,6 +24,7 @@ const SHELL = [
   './js/views/jobs.js',
   './js/views/dispatch.js',
   './js/views/customers.js',
+  './js/views/customer.js',
   './js/views/quotes.js',
   './js/views/invoices.js',
   './js/views/expenses.js',

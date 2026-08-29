@@ -70,10 +70,22 @@ VIEWS.dashboard = {
       <div class="kpi"><div class="ic ${cls}">${icon(ic,17)}</div>
         <div class="lab">${lab}</div><div class="val">${val}</div><div class="sub">${sub}</div></div>`;
 
+    /* pipeline + activity for the admin strip */
+    const stageCounts = PIPELINE.map((lbl, s) => db.jobs.filter(j => j.status !== 'Cancelled' && jobStage(j) === s).length);
+    const acts = [];
+    db.jobs.forEach(j => (j.timeline||[]).forEach(tl => acts.push({at: tl.at, text: `${j.ref} — ${tl.text}`})));
+    acts.sort((a,b) => String(b.at).localeCompare(String(a.at)));
+    const recentActs = acts.slice(0,8);
+    const nRem = (typeof reminders === 'function') ? reminders().length : 0;
+
     return `
     <div class="greet card">
       <div>
-        <h1 class="greet-h">${g.text} ${g.part==='morning'?'☀️':g.part==='afternoon'?'🌤':'🌙'}</h1>
+        <div class="row" style="align-items:center;flex-wrap:wrap">
+          <h1 class="greet-h">${g.text} ${g.part==='morning'?'☀️':g.part==='afternoon'?'🌤':'🌙'}</h1>
+          <span class="chip c-indigo role-chip" title="Signed in with full business access">👷 Admin</span>
+          <button class="btn ghost sm" id="da-bell" style="margin-left:auto">${icon('bell',14)} Reminders${nRem ? ` <span class="bell-badge" style="position:static;display:inline-grid">${nRem}</span>` : ''}</button>
+        </div>
         <div class="muted small">${fmtDateFull(t)} · ${jobsToday.length} job${jobsToday.length===1?'':'s'} on today's schedule · ${money(revToday)} collected today</div>
       </div>
       <div class="greet-mini">
@@ -91,6 +103,15 @@ VIEWS.dashboard = {
       ${kpi('Jobs this month', jobsMonth.length, `${completedMonth.length} completed`, 'calendar','amber')}
       ${kpi('Low stock', low.length, `${db.inventory.filter(i=>i.qty<=0).length} out of stock`, 'box','violet')}
       ${kpi('Quotations pending', money(sum(db.quotes.filter(q=>q.status==='Sent'), quoteTotal)), `${db.quotes.filter(q=>q.status==='Sent').length} awaiting approval`, 'doc','violet')}
+    </div>
+
+    <div class="card mt12">
+      <div class="row mb8"><h3 style="margin:0">${icon('chart',15)} Pipeline at a glance</h3><span class="muted small" style="margin-left:auto">live count of jobs per stage</span></div>
+      <div class="pipe-strip">
+        ${PIPELINE.map((lbl, s) => `<div class="pipe-cell ${stageCounts[s]?'has':''} ${s===5?'paid':''}">
+          <div class="pipe-n">${stageCounts[s]}</div><div class="pipe-l">${lbl}</div>
+        </div>`).join('')}
+      </div>
     </div>
 
     <div class="row mb16">
@@ -125,6 +146,17 @@ VIEWS.dashboard = {
               <a class="btn icon wa" target="_blank" rel="noopener" href="${waLink(d.c.phone, waTemplateMsg('payment_reminder', {customer:d.c.name.split(' ')[0], ref:'an open invoice', balance:money(d.v), due:'the due date', business:db.business.name}))}" title="Nudge on WhatsApp">${icon('wa',13)}</a>
             </div>
           </div>`).join('') : '<div class="empty small">Nothing outstanding 🎉</div>'}
+      </div>
+      <div class="card">
+        <h3>${icon('clock',15)} Recent activity</h3>
+        ${recentActs.length ? recentActs.map(a => {
+          const d = new Date(a.at);
+          return `<div class="tl-item"><span class="tl-dot"></span><div>
+            <div class="tl-text">${esc(a.text)}</div>
+            <div class="muted small">${d.toLocaleDateString('en-KE',{day:'numeric',month:'short'})} · ${pad2(d.getHours())}:${pad2(d.getMinutes())}</div>
+          </div></div>`;
+        }).join('') : '<div class="empty small">Job activity (schedule, dispatch, completion, payments…) will appear here.</div>'}
+        <div class="muted small mt8">Auto-logged from the job timeline</div>
       </div>
     </div>
 
@@ -179,6 +211,8 @@ VIEWS.dashboard = {
     $('#da-pay').onclick = quickRecordPayment;
     $('#da-stock').onclick = () => go('inventory', {});
     $('#da-maint').onclick = () => go('maintenance', {});
+    const bell = $('#da-bell');
+    if(bell) bell.onclick = reminderSheet;
     $$('#content tr[data-job]').forEach(tr => tr.onclick = () => openJobModal(tr.dataset.job));
   }
 };

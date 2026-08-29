@@ -123,6 +123,7 @@ VIEWS.customer = {
         <div class="row" style="flex-wrap:wrap">
           ${c.phone?`<a class="btn wa sm" target="_blank" rel="noopener" href="${waLink(c.phone,'Hi '+esc(c.name.split(' ')[0])+'!')}">${icon('wa',14)} WhatsApp</a>`:''}
           <button class="btn ghost sm" id="cu-edit">${icon('edit',14)} Edit</button>
+          <button class="btn ghost sm" id="cu-acc">${icon('users',14)} Customer account</button>
           <button class="btn ghost sm" id="cu-job">${icon('plus',14)} New job</button>
           <button class="btn ghost sm" id="cu-quote">${icon('spark',14)} New quote</button>
         </div>
@@ -202,6 +203,7 @@ VIEWS.customer = {
     if(!c) return;
     $('#cu-back').onclick = () => go('customers', {});
     $('#cu-edit').onclick = () => customerModal(c);
+    $('#cu-acc').onclick = () => customerAccountModal(c);
     $('#cu-job').onclick = () => jobModal({customerId:c.id, address:c.address});
     $('#cu-quote').onclick = () => go('quote_edit', {customerId:c.id});
     $('#cu-notego').onclick = () => {
@@ -216,3 +218,57 @@ VIEWS.customer = {
     $$('#content tr[data-quote]').forEach(tr => tr.onclick = () => go('quote_edit', {id: tr.dataset.quote}));
   }
 };
+
+/* ---- customer portal account (role: customer, linked to this profile) ---- */
+function customerAccountModal(c){
+  const linked = AUTH.accounts().find(a => a.custId === c.id || (c.email && a.email === c.email.toLowerCase()));
+  const body = linked
+    ? `
+    <div class="spread" style="padding:6px 0">
+      <div><b>${esc(linked.name)}</b><div class="muted small">${esc(linked.email)} · ${fmtDate(linked.createdAt.slice(0,10))}</div></div>
+      <span class="chip c-green">Linked</span>
+    </div>
+    <p class="muted small" style="margin:10px 0 0">This customer can sign in to the portal with that email and password — on this device, or any device holding your business data (synced). The portal only shows <b>their</b> quotes, invoices, jobs and payments.</p>
+    <div class="row mt12">
+      <button class="btn primary sm" id="cacc-open">${icon('users',14)} Open their portal (switch session)</button>
+      <button class="btn danger sm" id="cacc-del">${icon('trash',14)} Delete</button>
+    </div>`
+    : `
+    <p class="muted small" style="margin-top:0">Create a portal login for <b>${esc(c.name)}</b>. They'll see only their own quotations, invoices, jobs and payments — read-only, no business data.</p>
+    <div class="field"><label>Email</label><input class="inp" id="cacc-email" type="email" value="${esc(c.email||'')}"></div>
+    <div class="field"><label>Initial password <span class="muted small">(min 6 characters — share it with the customer)</span></label><input class="inp" id="cacc-pass" type="password" placeholder="e.g. bathroom-2026"></div>
+    <div class="field"><label>Security question answer <span class="muted small">(customer chooses the question later, or defaults to the first)</span></label><input class="inp" id="cacc-sqa" placeholder="e.g. their city"></div>`;
+  openModal(`Customer account — ${esc(c.name)}`, body, {
+    width:'sm',
+    footerHtml: linked
+      ? `<button class="btn ghost" id="cacc-x">Close</button>`
+      : `<button class="btn ghost" id="cacc-x">Cancel</button><button class="btn primary" id="cacc-go">${icon('users',14)} Create customer account</button>`,
+    onMount(){
+      if(typeof bindPwToggles === 'function') bindPwToggles($('#modal-root'));
+      $('#cacc-x').onclick = closeModal;
+      if(linked){
+        $('#cacc-open').onclick = () => { closeModal(); switchToSession(linked.email); };
+        $('#cacc-del').onclick = () => askConfirm(`Delete customer account <b>${esc(linked.email)}</b>? Their portal access ends immediately.`, () => {
+          AUTH.deleteAccount(linked.email);
+          closeModal(); reRender(); toast('Customer account deleted');
+        }, {label:'Delete account'});
+      } else {
+        $('#cacc-go').onclick = () => {
+          const email = $('#cacc-email').value.trim();
+          const pass = $('#cacc-pass').value;
+          const sqa = $('#cacc-sqa').value.trim();
+          if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ toast('Enter a valid email','warn'); return; }
+          if(pass.length < 6){ toast('Password must be at least 6 characters','warn'); return; }
+          if(!sqa){ toast('Enter a security answer for the customer','warn'); return; }
+          const r = AUTH.createAccount({
+            name: c.name, email, password: pass, secA: sqa,
+            role: 'customer', custId: c.id, bizKey: DB.currentKey()
+          });
+          if(!r.ok){ toast(r.error, 'warn'); return; }
+          closeModal(); reRender();
+          toast(`${c.name.split(' ')[0]} can now sign in to the portal (${email})`);
+        };
+      }
+    }
+  });
+}

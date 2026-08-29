@@ -133,15 +133,22 @@ const AUTH = {
   session(){ try { return localStorage.getItem(this.SES_KEY) || ''; } catch(e){ return ''; } },
   setSession(v){ try { v ? localStorage.setItem(this.SES_KEY, v) : localStorage.removeItem(this.SES_KEY); } catch(e){} },
   hasSession(){ return !!this.session(); },
+  role(email){
+    const e = String(email || this.session() || '').trim().toLowerCase();
+    if(!e || e === 'guest') return 'admin';
+    const acc = this.byEmail(e);
+    return (acc && acc.role === 'customer') ? 'customer' : 'admin';
+  },
   dbKey(email){
     return email === 'guest' ? 'aquaflow_pms_v1' : 'aquaflow_pms_v1:' + String(email||'guest').toLowerCase();
   },
 
-  createAccount({name, email, password, secQ, secA}){
+  createAccount({name, email, password, secQ, secA, role, custId, bizKey}){
     name = String(name||'').trim();
     email = String(email||'').trim().toLowerCase();
     secQ = secQ || SEC_QUESTIONS[0];
     secA = String(secA||'').trim();
+    role = role === 'customer' ? 'customer' : 'admin';
     if(!name) return {ok:false, error:'Enter your name'};
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return {ok:false, error:'Enter a valid email address'};
     if(!password || password.length < 6) return {ok:false, error:'Password must be at least 6 characters'};
@@ -149,17 +156,21 @@ const AUTH = {
     if(this.byEmail(email)) return {ok:false, error:'An account with this email already exists on this device'};
     const salt = randHex(16);
     const acc = {
-      email, name,
+      email, name, role,
       salt,
       hash: pbkdf2Sha256Hex(password, hexToBytes(salt), this.ITER),
       sq: secQ,
       sqHash: sha256Hex(secA.toLowerCase()),
       createdAt: new Date().toISOString()
     };
+    if(custId) acc.custId = custId;
+    if(bizKey) acc.bizKey = bizKey;
     const list = this.accounts(); list.push(acc); this.saveAccounts(list);
-    // fresh clean workspace for this account (no demo data)
-    const key = this.dbKey(email);
-    try { localStorage.setItem(key, JSON.stringify(emptyDb(name))); } catch(e){}
+    if(role !== 'customer'){
+      // fresh clean workspace for this account (no demo data)
+      const key = this.dbKey(email);
+      try { localStorage.setItem(key, JSON.stringify(emptyDb(name))); } catch(e){}
+    }
     this.setSession(email);
     return {ok:true, account:acc};
   },
@@ -249,6 +260,7 @@ AUTH.renderAuth = function(initialMode){
   if(!root) return;
   root.hidden = false;
   document.body.classList.add('preauth');
+  document.body.classList.remove('app-customer');
   root.innerHTML = `
   <div class="auth-wrap">
     <div class="auth-card">
@@ -277,6 +289,11 @@ AUTH.renderAuth = function(initialMode){
       <button class="btn primary" id="au-signin" style="width:100%;justify-content:center">Sign in</button>
       <button class="linklike small mt8" id="au-forgot" style="display:block">Forgot password?</button>`,
     'up': `
+      <div class="field"><label>Who is signing up?</label>
+        <div class="role-pick" id="au-rolepick">
+          <button type="button" class="role-btn active" data-role="admin">👷 Business owner<span class="muted small">full access to the business</span></button>
+          <button type="button" class="role-btn" data-role="customer">👤 Customer<span class="muted small">view my quotes, invoices &amp; payments</span></button>
+        </div></div>
       <div class="field"><label>Full name</label><input class="inp" id="au-name" placeholder="e.g. Victor Mwangi"></div>
       <div class="field"><label>Email</label><input class="inp" id="au-uemail" type="email" placeholder="you@business.co.ke"></div>
       <div class="field"><label>Password</label><input class="inp" id="au-upass" type="password" placeholder="At least 6 characters"></div>
@@ -304,6 +321,7 @@ AUTH.renderAuth = function(initialMode){
   const show = m => {
     mode = m;
     view.innerHTML = views[m];
+    if(typeof bindPwToggles === 'function') bindPwToggles(view);
     document.getElementById('au-tab-in').classList.toggle('active', m==='in');
     document.getElementById('au-tab-up').classList.toggle('active', m==='up');
     if(m==='in'){
@@ -328,13 +346,21 @@ AUTH.renderAuth = function(initialMode){
       });
     }
     if(m==='up'){
+      let upRole = 'admin';
+      const pick = document.getElementById('au-rolepick');
+      if(pick) $$('.role-btn', pick).forEach(b => b.onclick = () => {
+        $$('.role-btn', pick).forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        upRole = b.dataset.role;
+      });
       document.getElementById('au-create').onclick = () => {
         const r = AUTH.createAccount({
           name: document.getElementById('au-name').value,
           email: document.getElementById('au-uemail').value,
           password: document.getElementById('au-upass').value,
           secQ: document.getElementById('au-sq').value,
-          secA: document.getElementById('au-sqa').value
+          secA: document.getElementById('au-sqa').value,
+          role: upRole
         });
         if(!r.ok){ setMsg(r.error, false); return; }
         bootedEnterApp();
@@ -381,22 +407,32 @@ AUTH.hideAuth = function(){
 function bootedEnterApp(){
   AUTH.hideAuth();
   const s = AUTH.session() || 'guest';
+  const role = AUTH.role(s);
+  document.body.classList.toggle('app-customer', role === 'customer');
   if(typeof db !== 'undefined' && db && window.__AF_SESSION && window.__AF_SESSION !== s){
     // profile switched at the auth gate — load that profile's database
-    db = DB.load();
-    if(!db){
-      if(s === 'guest'){
-        // guest workspace is the seeded demo — create it if this device has never used it
-        DB.seed();
-      } else {
-        const a = AUTH.byEmail(s);
-        db = emptyDb(a ? a.name : 'Boss');
-        DB.save();
+    if(role === 'customer'){
+      db = DB.loadFor(s) || DB.load() || db;
+    } else {
+      db = DB.load();
+      if(!db){
+        if(s === 'guest'){
+          // guest workspace is the seeded demo — create it if this device has never used it
+          DB.seed();
+        } else {
+          const a = AUTH.byEmail(s);
+          db = emptyDb(a ? a.name : 'Boss');
+          DB.save();
+        }
       }
     }
   }
   window.__AF_SESSION = s;
+  // role may have changed (admin ↔ customer) — rebuild the navigation shell
+  if(typeof buildNav === 'function'){ buildNav(); if(typeof buildTabbar === 'function') buildTabbar(); }
   if(typeof initApp === 'function') initApp();
+  // always land on the correct home view for this role (profile switch at the gate)
+  if(typeof go === 'function') go(role === 'customer' ? 'cust_dash' : 'dashboard', {});
 }
 function storageOK(){
   try { localStorage.setItem('__af_probe', '1'); localStorage.removeItem('__af_probe'); return true; }

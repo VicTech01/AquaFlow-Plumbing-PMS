@@ -59,7 +59,8 @@ Or open `index.html` directly in a browser (data persists via localStorage).
 
 | Module | What it does |
 |---|---|
-| **Dashboard (Business OS)** | Personalized greeting ("Good morning, VICTOR" — owner name set in Settings), today/this week/this month income, **P&L KPIs: Revenue, Expenses, Net profit, Outstanding, Jobs this month**, 4 charts — Revenue vs Expenses (6 months, grouped bars), Jobs completed, **Most profitable job types**, Outstanding top-debtors with one-tap WhatsApp nudge. Plus quick actions, 7-day job list, low stock, maintenance due |
+| **Dashboard (Business OS)** | Admin workspace: personalized greeting + **role badge**, **reminders shortcut**, today/this week/this month income, **P&L KPIs: Revenue, Expenses, Net profit, Outstanding, Quotes pending, Jobs**, **pipeline-at-a-glance strip** (live count per stage), **recent activity feed** (auto-logged from job timelines), 4 charts — Revenue vs Expenses (6 months), Jobs completed, Most profitable job types, Outstanding top-debtors with one-tap WhatsApp nudge. Quick actions, 7-day job list, low stock, maintenance due |
+| **Customer Portal** | Role-based customer dashboard (read-only, scoped to that customer): overview (amount owed, total paid, active jobs, latest invoice/quote/job with PDF download), **My quotations**, **My invoices** (read-only detail + PDF), **My jobs**, **Help & contact** (business WhatsApp/email). Created from a customer record by the admin (linked account), or self sign-up (shows "not linked" until the admin links the profile). Admin nav is fully hidden; admin views are blocked at the router |
 | **Leads & Pipeline** | Kanban board of the sales funnel: **New → Contacted → Quoted → Won / Lost**. Each lead: service, location, budget, source, notes. One-click actions: **create customer** (dedupes by phone), **create quotation** (prefilled), **schedule job** (lead auto-marks Won + jobRef), mark Won/Lost, WhatsApp link. Open-value stats |
 | **Jobs & Scheduling** | Week calendar (07:00–19:00), click empty slot to schedule, list with search + status/**type**/technician/date filters, **Pipeline tab** with a 6-stage stepper per job (Quote → Scheduled → In Progress → Completed → Invoiced → Paid) and a **Next action** button (Create quote / Assign crew / Dispatch / Start / Complete / Create invoice / Collect / ✓ Paid). Job detail shows the pipeline stepper, a **Job income card** (Labour / Materials / Transport + VAT, paid, balance) and **"Record materials used"** (see Inventory) |
 | **Technician Dispatch** | Per-technician daily load bars vs capacity, skills, one-click dispatch with crew assignment, start/complete/cancel actions, auto WhatsApp dispatch message |
@@ -77,7 +78,7 @@ Or open `index.html` directly in a browser (data persists via localStorage).
 | **WhatsApp Notifications** | Outbox of every composed message (dispatch, quote sent, invoice, payment received, reminder, maintenance). Pre-filled `wa.me` chats — no Business API needed. Copy / mark-sent / clear. All templates editable in Settings |
 | **Sync & Devices** | Offline-first multi-device sync: Wi-Fi sync with any other AquaFlow device (pull / full-pull / full-push / merge), the desktop's built-in LAN sharing server (phones install from it), offline file export/import (merge, never wipe), per-device record counts, last-change/last-sync status |
 | **Settings** | Business profile (**owner name** — powers the dashboard greeting), **logo** (appears on PDF documents), labor rates, travel fees, VAT, ref prefixes, payment terms, WhatsApp templates, JSON export/import backup, **automatic backups** (3 rolling snapshots, restore), demo-data reset, **Team** (add/edit/enable/disable/delete technicians), **Account & security** (change password / security question, sign out, switch or delete local accounts) |
-| **Sign in / Sign up** | Local (offline) accounts with per-account data isolation, PBKDF2-hashed passwords, guest mode, and forgot-password via security question — see [Accounts & security](#accounts--security-offline) |
+| **Sign in / Sign up** | Local (offline) accounts with per-account data isolation, PBKDF2-hashed passwords, **role picker (business owner / customer)**, **show/hide password (eye) on every password field**, guest mode, and forgot-password via security question — see [Accounts & security](#accounts--security-offline) |
 
 ### The full pipeline
 
@@ -106,7 +107,8 @@ Lead → Quotation → Scheduled → In Progress → Completed → Invoiced → 
 
 The app is 100% offline, so accounts are **local to the device** — no email is ever sent, nothing leaves the device.
 
-- **Sign up / sign in** — create an account with name + email + password, or continue as **guest** (the original local demo workspace, unchanged).
+- **Sign up / sign in** — create an account with name + email + password, picking your role: **business owner (admin)** or **customer** (portal). Or continue as **guest** (the original local demo workspace, unchanged). Every password field has a **show/hide (eye) toggle**.
+- **Roles** — admin accounts get the full business OS. **Customer accounts** get a scoped, read-only portal (their own quotes, invoices, jobs, payments + PDFs) with the admin interface completely hidden. Admins create/link customer accounts from any customer record ("Customer account"); customers can also self sign up and get linked later. Customer portals read the shared business database on the device (works on the business's device and on any device that has received the data via sync).
 - **Per-account data isolation** — each account owns its own database (`aquaflow_pms_v1:<email>` in localStorage). Guest keeps the legacy `aquaflow_pms_v1` key. Accounts never see each other's data. New accounts start with a clean business workspace (zeroed counters, default templates & KES rates, no demo data) — plus a Team section in Settings so you can add your technicians before dispatching.
 - **Password storage** — PBKDF2-SHA256 (40,000 iterations, per-account random salt), implemented in pure JS (`js/auth.js`) and cross-verified against `node:crypto` in tests. Only salt + hash are stored; the password is never saved.
 - **Forgot password** — answer the **security question** you chose at sign-up to set a new password, entirely on-device. (A real emailed reset link would require a backend, which breaks the fully-offline design — the security-question flow is the offline-correct equivalent.)
@@ -123,7 +125,8 @@ The app is 100% offline, so accounts are **local to the device** — no email is
 - **`smoke6.js`** — 17 accounts tests: SHA-256/PBKDF2 vs `node:crypto` (FIPS vectors + random salts), sign-up, wrong-password, forgot-password via security question, password change, per-account data isolation, delete account, guest key, and full jsdom UI flows (auth screen → create → app → sign out → forgot → reset → sign in).
 - **`smoke7.js`** — 22 business-OS tests: PDF document content (quotation + invoice + logo), reports KPI math + period switching, reminders engine + bell, job timeline (auto + manual + site visit), job photos, quotation duplicate / convert-to-job / PDF, automatic backups + restore, quick-add sheet, FAB, settings additions.
 - **`smoke8.js`** — 10 deployment & login integrity tests: every `index.html` script must be in the SW precache list, SW cache versioning, network-first navigation, vercel.json no-cache headers, fail-fast blank-screen guard, and the full fresh-visitor auth cycle (sign up → app → sign out → wrong password → correct password → Enter-key submit).
-- Run all: `NODE_PATH=/usr/local/node_modules node smoke.js && … && node smoke8.js` (112 tests)
+- **`smoke9.js`** — 16 dashboard & visibility tests: password eye toggle (sign-in / sign-up / reset / change-password), role picker, admin-created linked customer account, customer portal shell + data scoping (other customers' records must not leak), admin-view blocking, read-only invoice detail, customer PDF, admin↔customer session switching, self sign-up "not linked" state, admin dashboard upgrades.
+- Run all: `NODE_PATH=/usr/local/node_modules node smoke.js && … && node smoke9.js` (128 tests)
 
 ## Structure
 
@@ -141,7 +144,7 @@ js/auth.js            accounts: pure-JS SHA-256/HMAC/PBKDF2, local account store
 js/app.js             state, storage, modals, charts, WA helpers, line-item editor, pipeline engine, reminders, job timeline, auto-backups, change-stamping
 js/pdf.js             professional quotation/invoice documents (screen preview + Print/Save-as-PDF, offline)
 js/lan-server.cjs     LAN sync server (pure Node — used by the desktop app, tested directly)
-js/views/*.js         one file per module (incl. sync.js = Sync & Devices)
+js/views/*.js         one file per module (incl. sync.js = Sync & Devices, customer.js = customer portal)
 js/main.js            bootstrap + navigation + desktop bridge
 electron/main.cjs     Electron main process (window, IPC, LAN server lifecycle, db.json backup)
 electron/preload.cjs  context-isolated bridge to the app

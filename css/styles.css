@@ -469,3 +469,33 @@ body.preauth .layout, body.preauth #tabbar, body.preauth #scrim, body.preauth #s
   .doc-table tr{page-break-inside:avoid}
   @page{margin:14mm}
 }
+
+/* ---------- v1.6: password eye toggle, role pick, customer portal, admin strip ---------- */
+.pw-field{position:relative}
+.pw-field .inp{width:100%;padding-right:42px}
+.pw-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:none;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer;border-radius:8px}
+.pw-toggle:hover{background:#eef2f7;color:var(--ink)}
+.pw-toggle.on{color:var(--accent)}
+
+.role-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.role-btn{display:flex;flex-direction:column;gap:2px;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;cursor:pointer;font-weight:700;font-size:13px;color:var(--ink)}
+.role-btn .small{font-weight:400}
+.role-btn:hover{border-color:#9db8d4}
+.role-btn.active{border-color:var(--accent);background:#f0f9ff;box-shadow:0 0 0 3px rgba(14,165,233,.12)}
+
+.role-chip{margin-left:10px;vertical-align:middle}
+
+.pipe-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.pipe-cell{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center}
+.pipe-cell .pipe-n{font-size:20px;font-weight:800;color:var(--muted)}
+.pipe-cell .pipe-l{font-size:10.5px;color:var(--muted);margin-top:2px;letter-spacing:.2px}
+.pipe-cell.has{background:#f0f9ff;border-color:#bae6fd}
+.pipe-cell.has .pipe-n{color:var(--accent)}
+.pipe-cell.paid.has{background:#f0fdf4;border-color:#bbf7d0}
+.pipe-cell.paid.has .pipe-n{color:var(--green)}
+@media (max-width:760px){ .pipe-strip{grid-template-columns:repeat(3,1fr)} }
+
+/* customer portal */
+body.app-customer #top-quick-quote, body.app-customer #top-quick-job, body.app-customer .fab{display:none!important}
+.cust-banner{display:flex;gap:10px;align-items:flex-start;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;color:#92400e;margin-bottom:14px}
+.cust-banner-ok{display:flex;gap:8px;align-items:center;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:10px 14px;color:#166534;margin-bottom:14px;font-size:13px}

@@ -18,6 +18,35 @@ const DB = {
     catch(e){ if(db) db.memoryMode = true; }
   },
   seed(){ const d = makeSeed(); db = d; this.save(); return d; },
+  /* customer portal: load the business database this customer's account points to */
+  scanMostRecentKey(){
+    let best = null, bestAt = '';
+    try {
+      for(let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        if(!k) continue;
+        if(k === 'aquaflow_pms_v1' || k.indexOf('aquaflow_pms_v1:') === 0){
+          try {
+            const d = JSON.parse(localStorage.getItem(k));
+            const at = (d && d.meta && d.meta.lastChangedAt) || (d && d.meta && d.meta.createdAt) || '';
+            if(at >= bestAt){ bestAt = at; best = k; }
+          } catch(e){}
+        }
+      }
+    } catch(e){}
+    return best;
+  },
+  loadFor(email){
+    try {
+      const acc = (typeof AUTH !== 'undefined') ? AUTH.byEmail(email) : null;
+      const key = (acc && acc.bizKey) || this.scanMostRecentKey();
+      if(key){
+        const raw = localStorage.getItem(key);
+        if(raw){ const d = JSON.parse(raw); if(d && d.v === 1){ db = d; return d; } }
+      }
+    } catch(e){}
+    return null;
+  },
   adoptIncoming(dbJson, {toastNote}={}){
     // remote push arrived (phone → desktop): merge into local state
     if(typeof SyncCore === 'undefined') return false;
@@ -300,6 +329,8 @@ const ICONS = {
   chart:'<path d="M4 20V9M10 20V4M16 20v-6M3 20h18"/>',
   camera:'<path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.4"/>',
   print:'<path d="M7 8V3h10v5M7 17H4v-6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6h-3M7 14h10v7H7z"/>',
+  eye:'<path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  eyeOff:'<path d="M4 4l16 16M10 5.3a10.6 10.6 0 0 1 2-.3c6.5 0 10 7 10 7a17.9 17.9 0 0 1-3.3 4M6.2 6.2A17.4 17.4 0 0 0 2 12s3.5 7 10 7c1.4 0 2.7-.3 3.9-.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
   userPlus:'<circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.2 3.4-5 6.5-5s5.7 1.8 6.5 5"/><path d="M19 6v6M16 9h6"/>',
   send:'<path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/>',
   sync:'<path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2" transform="translate(0,0)"/><path d="M21 3v6h-6M3 21v-6h6"/>',
@@ -544,6 +575,49 @@ function consumeStock(inv, items){
   return warns;
 }
 
+/* ================= password visibility toggle (eye) ================= */
+function bindPwToggles(root){
+  const scope = root || document;
+  scope.querySelectorAll('input[type="password"]').forEach(inp => {
+    if(inp.dataset.pwBound) return;
+    inp.dataset.pwBound = '1';
+    const wrap = document.createElement('div');
+    wrap.className = 'pw-field';
+    inp.parentNode.insertBefore(wrap, inp);
+    wrap.appendChild(inp);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pw-toggle';
+    btn.title = 'Show password';
+    btn.setAttribute('aria-label', 'Show or hide password');
+    btn.innerHTML = icon('eye', 17);
+    wrap.appendChild(btn);
+    btn.onclick = () => {
+      const show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      btn.innerHTML = icon(show ? 'eyeOff' : 'eye', 17);
+      btn.classList.toggle('on', show);
+      btn.title = show ? 'Hide password' : 'Show password';
+      inp.focus();
+    };
+  });
+}
+
+/* ================= role-aware session (admin / customer portal) ================= */
+function isCustomerSession(){
+  if(typeof AUTH === 'undefined') return false;
+  const s = AUTH.session();
+  return !!s && s !== 'guest' && AUTH.role(s) === 'customer';
+}
+function myCustomer(){
+  if(!isCustomerSession() || !db) return null;
+  const acc = AUTH.byEmail(AUTH.session());
+  if(!acc) return null;
+  if(acc.custId) return customerById(acc.custId) || null;
+  return db.customers.find(c => c.email && c.email.toLowerCase() === AUTH.session()) || null;
+}
+const CUSTOMER_VIEWS = ['cust_dash','cust_quotes','cust_invoices','cust_invoice','cust_jobs','cust_help'];
+
 /* ================= navigation ================= */
 const VIEWS = {};
 const MAIN_TABS = ['dashboard','jobs','dispatch','customers'];
@@ -558,6 +632,7 @@ function sheetClose(){
   const sc = $('#scrim'); if(sc) sc.classList.remove('open');
 }
 function go(view, params = {}){
+  if(isCustomerSession() && !CUSTOMER_VIEWS.includes(view)) view = 'cust_dash';
   const v = VIEWS[view];
   if(!v) return;
   ui = {view, params};
