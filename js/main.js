@@ -1,0 +1,128 @@
+'use strict';
+/* ================= bootstrap ================= */
+const NAV = [
+  ['dashboard','Dashboard','dashboard'],
+  ['jobs','Jobs & Scheduling','calendar'],
+  ['dispatch','Dispatch','truck'],
+  ['customers','Customers','users'],
+  ['quotes','Quotations','doc'],
+  ['invoices','Invoices & Payments','receipt'],
+  ['inventory','Inventory','box'],
+  ['maintenance','Maintenance','wrench'],
+  ['whatsapp','WhatsApp','wa'],
+  ['settings','Settings','gear']
+];
+
+function buildNav(){
+  $('#nav').innerHTML = NAV.map(([v,label,ic]) =>
+    `<a data-view="${v}">${icon(ic,17)}<span>${label}</span></a>`).join('');
+  $$('#nav a').forEach(a => a.onclick = () => go(a.dataset.view, {}));
+}
+
+function buildTabbar(){
+  const items = [
+    ['dashboard','Home','dashboard'],
+    ['jobs','Jobs','calendar'],
+    ['dispatch','Dispatch','truck'],
+    ['customers','Customers','users'],
+    ['more','More','spark']
+  ];
+  $('#tabbar').innerHTML = items.map(([v,l,ic]) =>
+    `<button data-tab="${v}">${icon(ic,20)}<span>${l}</span></button>`).join('');
+  $$('#tabbar button').forEach(b => b.onclick = () => {
+    if(b.dataset.tab === 'more'){ openMoreSheet(); return; }
+    go(b.dataset.tab, {});
+  });
+}
+
+function badge(n, cls){ return n ? `<span class="chip c-${cls||'amber'}">${n}</span>` : ''; }
+
+function openMoreSheet(){
+  const t = isoDate(today());
+  const nSentQ = db.quotes.filter(q => q.status === 'Sent').length;
+  const nOverdue = db.invoices.filter(i => invState(i).label === 'Overdue').length;
+  const nLow = db.inventory.filter(i => i.qty <= i.reorder).length;
+  const nDue = db.maintenance.filter(m => dayDiff(t, nextDueDate(m)) <= 14).length;
+  const nWa = db.outbox.filter(o => !o.sent).length;
+  const jobsToday = db.jobs.filter(j => j.date === t && !['Cancelled','Completed'].includes(j.status)).length;
+  sheetOpen(`
+    <div class="sheet-grab"></div>
+    <div class="sheet-head"><h3>More</h3><button class="x" data-close>✕</button></div>
+    <div class="sheet-quick">
+      <button class="btn primary sm" data-act="job">${icon('plus',14)} Job</button>
+      <button class="btn ghost sm" data-act="quote">${icon('spark',14)} Quote</button>
+      <button class="btn ghost sm" data-act="invoice">${icon('receipt',14)} Invoice</button>
+      <button class="btn ghost sm" data-act="pay">${icon('cash',14)} Collect</button>
+    </div>
+    <div class="sheet-grid">
+      <button class="sheet-item" data-goto="quotes"><span class="ic">${icon('doc',17)}</span>Quotations${badge(nSentQ,'violet')}</button>
+      <button class="sheet-item" data-goto="invoices"><span class="ic">${icon('receipt',17)}</span>Invoices${badge(nOverdue,'red')}</button>
+      <button class="sheet-item" data-goto="inventory"><span class="ic">${icon('box',17)}</span>Inventory${badge(nLow)}</button>
+      <button class="sheet-item" data-goto="maintenance"><span class="ic">${icon('wrench',17)}</span>Maintenance${badge(nDue)}</button>
+      <button class="sheet-item" data-goto="whatsapp"><span class="ic">${icon('wa',17)}</span>WhatsApp${badge(nWa)}</button>
+      <button class="sheet-item" data-goto="settings"><span class="ic">${icon('gear',17)}</span>Settings</button>
+    </div>
+    <div class="sheet-note">${jobsToday} job${jobsToday===1?'':'s'} on today's schedule · data stored on this device</div>`);
+  $('#sheet [data-close]').onclick = sheetClose;
+  $$('#sheet [data-goto]').forEach(b => b.onclick = () => go(b.dataset.goto, {}));
+  $$('#sheet [data-act]').forEach(b => b.onclick = () => {
+    const a = b.dataset.act;
+    sheetClose();
+    if(a === 'job') jobModal({});
+    else if(a === 'quote') go('quote_edit', {});
+    else if(a === 'invoice') go('invoice_new', {});
+    else if(a === 'pay') quickRecordPayment();
+  });
+}
+
+function openActionsSheet(){
+  sheetOpen(`
+    <div class="sheet-grab"></div>
+    <div class="sheet-head"><h3>Create new</h3><button class="x" data-close>✕</button></div>
+    <div class="sheet-grid" style="grid-template-columns:1fr 1fr;padding-top:6px">
+      <button class="sheet-item" data-act="job"><span class="ic">${icon('calendar',17)}</span>Schedule job</button>
+      <button class="sheet-item" data-act="quote"><span class="ic">${icon('spark',17)}</span>AI quotation</button>
+      <button class="sheet-item" data-act="invoice"><span class="ic">${icon('receipt',17)}</span>Invoice</button>
+      <button class="sheet-item" data-act="pay"><span class="ic">${icon('cash',17)}</span>Collect payment</button>
+    </div>`);
+  $('#sheet [data-close]').onclick = sheetClose;
+  $$('#sheet [data-act]').forEach(b => b.onclick = () => {
+    const a = b.dataset.act;
+    sheetClose();
+    if(a === 'job') jobModal({});
+    else if(a === 'quote') go('quote_edit', {});
+    else if(a === 'invoice') go('invoice_new', {});
+    else if(a === 'pay') quickRecordPayment();
+  });
+}
+
+function bindTop(){
+  $('#top-quick-job').onclick = () => jobModal({});
+  $('#top-quick-quote').onclick = () => go('quote_edit', {});
+  $('#top-plus').onclick = () => openActionsSheet();
+  $('#scrim').onclick = () => sheetClose();
+  $('#top-date').textContent = fmtDateFull(isoDate(today()));
+}
+
+function initApp(){
+  if(db) return;
+  db = DB.load();
+  if(!db){
+    db = DB.seed();
+    toast('Loaded demo data — reset anytime in Settings');
+  }
+  buildNav();
+  buildTabbar();
+  bindTop();
+  $('#side-foot').innerHTML = sideFootHTML();
+  go('dashboard', {});
+  window.API = {
+    get db(){ return db; },
+    go, openModal, closeModal, toast, waLink, chip, invState, invBalance, invTotal,
+    pushOutbox, aiGenerate, quoteTotal, openJobModal, jobModal, payModal,
+    openMoreSheet, openActionsSheet, sheetClose
+  };
+}
+
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initApp);
+else initApp();

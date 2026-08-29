@@ -1,0 +1,15 @@
+# dependencies
+node_modules/
+
+# backups & exports
+*.bak
+aquaflow-backup-*.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# logs
+*.log
