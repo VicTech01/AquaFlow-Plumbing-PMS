@@ -81,6 +81,34 @@
 <script src="js/views/settings.js"></script>
 <script src="js/main.js"></script>
 <script>
+/* Fail-fast guard: if the app scripts failed to load (broken or partial
+   deployment, dead cache), show a clear message + reload instead of a blank
+   page. Your data on this device is unaffected. */
+(function(){
+  function check(){
+    try {
+      var pre = document.body.classList.contains('preauth');
+      var root = document.getElementById('auth-root');
+      var authRendered = !!(root && root.innerHTML && root.innerHTML.trim());
+      var appBooted = !!(window.API);
+      if (pre && !authRendered && !appBooted) {
+        if (root) {
+          root.innerHTML =
+            '<div class="auth-card" style="max-width:430px;text-align:center">' +
+            '<h1 style="margin:0 0 10px">⚠️ AquaFlow could not start</h1>' +
+            '<p class="muted small" style="line-height:1.6">The app files failed to load — this usually means the site is mid-deployment or the browser cache is stale. Your data stored on this device is safe.</p>' +
+            '<button class="btn primary" onclick="location.reload()" style="margin-top:16px;width:100%;justify-content:center">Reload now</button>' +
+            '</div>';
+        }
+      }
+    } catch(e) {}
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(check, 700); });
+  } else { setTimeout(check, 700); }
+})();
+</script>
+<script>
 /* PWA: cache the app shell so the phone version works offline.
    Only registers over http(s) (the LAN server / Vercel), never on file:// (desktop). */
 (function(){

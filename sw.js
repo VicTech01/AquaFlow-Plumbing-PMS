@@ -1,7 +1,10 @@
 /* AquaFlow PMS — service worker (phone PWA offline support).
-   Caches the app shell; sync/data endpoints are always live-network. */
+   v15 — FIX: navigation requests are network-first so a new deployment reaches
+   returning users immediately; the cache version is bumped on every change to
+   the shell so stale installs self-heal on the next load.
+   Sync/API traffic is never cached — it is live data. */
 'use strict';
-const CACHE = 'aquaflow-shell-v13';
+const CACHE = 'aquaflow-shell-v15';
 const SHELL = [
   './',
   './index.html',
@@ -12,7 +15,9 @@ const SHELL = [
   './js/utils.js',
   './js/seed.js',
   './js/sync.js',
+  './js/auth.js',
   './js/app.js',
+  './js/pdf.js',
   './js/main.js',
   './js/views/dashboard.js',
   './js/views/leads.js',
@@ -22,6 +27,7 @@ const SHELL = [
   './js/views/quotes.js',
   './js/views/invoices.js',
   './js/views/expenses.js',
+  './js/views/reports.js',
   './js/views/inventory.js',
   './js/views/maintenance.js',
   './js/views/whatsapp.js',
@@ -48,16 +54,33 @@ self.addEventListener('fetch', e => {
   // sync + API traffic is never cached — it's live data
   if (url.pathname.startsWith('/api/')) return;
   if (url.origin !== self.location.origin) return;
-  e.respondWith(
-    caches.match(e.request, { ignoreSearch: true }).then(cached => {
-      const fetchPromise = fetch(e.request).then(res => {
+
+  // Page navigation: network-first, update the cache, fall back to the cached
+  // shell when offline. This guarantees deploys are picked up on the next load.
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).then(res => {
         if (res && res.ok) {
           const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
+          caches.open(CACHE).then(c => c.put('./index.html', clone)).catch(() => {});
+        }
+        return res;
+      }).catch(() => caches.match(e.request).then(c => c || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // Static assets: cache-first with background refresh.
+  e.respondWith(
+    caches.match(e.request, { ignoreSearch: true }).then(cached => {
+      const refresh = fetch(e.request).then(res => {
+        if (res && res.ok) {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone)).catch(() => {});
         }
         return res;
       }).catch(() => cached);
-      return cached || fetchPromise;
+      return cached || refresh;
     })
   );
 });

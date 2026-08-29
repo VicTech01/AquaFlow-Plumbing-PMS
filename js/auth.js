@@ -317,6 +317,10 @@ AUTH.renderAuth = function(initialMode){
       };
       document.getElementById('au-forgot').onclick = () => show('forgot');
       const em = document.getElementById('au-email'); if(em) em.focus();
+      ['au-email','au-pass'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.addEventListener('keydown', e => { if(e.key === 'Enter') document.getElementById('au-signin').click(); });
+      });
     }
     if(m==='up'){
       document.getElementById('au-create').onclick = () => {
@@ -331,6 +335,10 @@ AUTH.renderAuth = function(initialMode){
         bootedEnterApp();
       };
       const nm = document.getElementById('au-name'); if(nm) nm.focus();
+      ['au-name','au-uemail','au-upass','au-sqa'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el && el.tagName !== 'SELECT') el.addEventListener('keydown', e => { if(e.key === 'Enter') document.getElementById('au-create').click(); });
+      });
     }
     if(m==='forgot'){
       const emailEl = document.getElementById('au-femail');
@@ -380,7 +388,17 @@ function bootedEnterApp(){
   window.__AF_SESSION = s;
   if(typeof initApp === 'function') initApp();
 }
+function storageOK(){
+  try { localStorage.setItem('__af_probe', '1'); localStorage.removeItem('__af_probe'); return true; }
+  catch(e){ return false; }
+}
 function bootApp(){
+  if(!storageOK()){
+    AUTH.renderAuth();
+    const foot = document.querySelector('.auth-foot');
+    if(foot) foot.innerHTML = '⚠️ Browser storage is blocked (private browsing?) — accounts and data will NOT persist in this window. The app itself will work for the session.';
+    return;
+  }
   if(AUTH.hasSession()){
     bootedEnterApp();
   } else {

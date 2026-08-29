@@ -122,14 +122,16 @@ The app is 100% offline, so accounts are **local to the device** — no email is
 - **`smoke5.js`** — 19 sync/offline tests: merge engine (union, last-write-wins, tombstones, counters), live LAN server (health, sync round-trip, static + PWA serving, state persistence), in-app stamping.
 - **`smoke6.js`** — 17 accounts tests: SHA-256/PBKDF2 vs `node:crypto` (FIPS vectors + random salts), sign-up, wrong-password, forgot-password via security question, password change, per-account data isolation, delete account, guest key, and full jsdom UI flows (auth screen → create → app → sign out → forgot → reset → sign in).
 - **`smoke7.js`** — 22 business-OS tests: PDF document content (quotation + invoice + logo), reports KPI math + period switching, reminders engine + bell, job timeline (auto + manual + site visit), job photos, quotation duplicate / convert-to-job / PDF, automatic backups + restore, quick-add sheet, FAB, settings additions.
-- Run all: `NODE_PATH=/usr/local/node_modules node smoke.js && … && node smoke7.js` (103 tests)
+- **`smoke8.js`** — 10 deployment & login integrity tests: every `index.html` script must be in the SW precache list, SW cache versioning, network-first navigation, vercel.json no-cache headers, fail-fast blank-screen guard, and the full fresh-visitor auth cycle (sign up → app → sign out → wrong password → correct password → Enter-key submit).
+- Run all: `NODE_PATH=/usr/local/node_modules node smoke.js && … && node smoke8.js` (112 tests)
 
 ## Structure
 
 ```
 index.html            single-page shell (+ PWA manifest link, SW registration)
 manifest.json         PWA manifest (phone "Add to Home screen")
-sw.js                 service worker — offline app shell for the phone
+sw.js                 service worker — offline app shell (network-first navigation, versioned cache)
+vercel.json           Vercel deploy config — no-cache headers so deploys are never pinned by CDN/browser caches
 icons/                app icons (192/512)
 css/styles.css        design system
 js/utils.js           date / money / DOM helpers
