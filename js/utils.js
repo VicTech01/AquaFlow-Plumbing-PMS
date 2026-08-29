@@ -24,6 +24,8 @@ const dayDiff = (a,b) => Math.round((parseISO(b) - parseISO(a)) / 86400000); // 
 const fmtDate = s => { const d = parseISO(s); return d ? d.toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}) : ''; };
 const fmtDateShort = s => { const d = parseISO(s); return d ? d.toLocaleDateString('en-KE',{weekday:'short',day:'numeric',month:'short'}) : ''; };
 const fmtDateFull = s => { const d = parseISO(s); return d ? d.toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) : ''; };
+const monthKey = d => isoDate(d).slice(0,7);
+const fmtInt = n => new Intl.NumberFormat('en-KE').format(Math.round(Number(n)||0));
 const relDays = s => {
   const n = dayDiff(isoDate(today()), s);
   if(n===0) return 'today';

@@ -91,7 +91,7 @@ function aiGenerate(typeId, o = {}){
   });
 
   const travelPrice = (b.travel && b.travel[area]) || 400;
-  lines.push({kind:'Labor', desc:`Travel fee — ${area==='city'?'within-city (Westlands/CBD/Kilimani etc.)':area}`, qty:1, unit:'trip', price:travelPrice,
+  lines.push({kind:'Transport', desc:`Travel fee — ${area==='city'?'within-city (Westlands/CBD/Kilimani etc.)':area}`, qty:1, unit:'trip', price:travelPrice,
     reason:'Standard travel allowance for this zone'});
 
   (cat.incl||[]).forEach(x => assumptions.push(`Includes: ${x}`));
@@ -294,7 +294,7 @@ function quoteStateFrom(p){
     id:null, ref:null,
     customerId: job ? job.customerId : (p.customerId || ''),
     jobId: p.jobId || null,
-    title: job ? job.title : '',
+    title: job ? job.title : (p.title || ''),
     items: [],
     discount:0, vatRate: db.business.vatRate || 16,
     status:'Draft',

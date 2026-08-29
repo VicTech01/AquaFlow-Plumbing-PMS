@@ -5,8 +5,8 @@ const path = require('path');
 const { JSDOM } = require('jsdom');
 
 const files = ['js/utils.js','js/seed.js','js/app.js',
-  'js/views/dashboard.js','js/views/jobs.js','js/views/dispatch.js','js/views/customers.js',
-  'js/views/quotes.js','js/views/invoices.js','js/views/inventory.js','js/views/maintenance.js',
+  'js/views/dashboard.js','js/views/leads.js','js/views/jobs.js','js/views/dispatch.js','js/views/customers.js',
+  'js/views/quotes.js','js/views/invoices.js','js/views/expenses.js','js/views/inventory.js','js/views/maintenance.js',
   'js/views/whatsapp.js','js/views/settings.js','js/main.js'];
 
 const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
@@ -44,7 +44,7 @@ check('seed data loaded', () => {
 });
 
 check('all main views render non-empty content', () => {
-  ['dashboard','jobs','dispatch','customers','quotes','invoices','inventory','maintenance','whatsapp','settings','quote_edit','invoice_new'].forEach(v => {
+  ['dashboard','leads','expenses','jobs','dispatch','customers','quotes','invoices','inventory','maintenance','whatsapp','settings','quote_edit','invoice_new'].forEach(v => {
     A.go(v, {});
     const c = doc.getElementById('content');
     if (!c || !c.innerHTML.length) throw new Error('empty content for ' + v);

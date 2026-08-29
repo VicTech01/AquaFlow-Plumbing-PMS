@@ -101,9 +101,11 @@ function makeSeed(){
     C('Kevin Wairimu','Residential','0735 209 448','Embakasi','Eastleigh Rd 12, Embakasi',-150),
     C('Grace Njeri','Residential','0722 778 913','Runda','7 Runda Ave, Runda',-310),
     C('Sunrise Apartments','Commercial','0701 556 210','CBD','77 Mbiari Kariuki St, CBD',-350),
-    C('Peter Mutua','Residential','0745 903 118','Thika','Muthaiga Rd 8, Thika',-60)
+    C('Peter Mutua','Residential','0745 903 118','Thika','Muthaiga Rd 8, Thika',-60),
+    C('Nelly Achieng','Residential','0745 220 318','Embakasi','Lamu St 88, Embakasi',-14),
+    C('John Mwangi','Residential','0798 334 120','Kilimani','12 Muthaiga Rd, Kilimani',-180)
   ];
-  const [KAMAU,CLINIC,OCHIENG,KAREN,HASSAN,PARK,WAIRIMU,NJERI,SUNRISE,MUTUA] = customers;
+  const [KAMAU,CLINIC,OCHIENG,KAREN,HASSAN,PARK,WAIRIMU,NJERI,SUNRISE,MUTUA,NELLY,JOHN] = customers;
 
   const technicians = [
     P('Brian Otieno','0712 000 111','Senior',1800,['Geyser & heating','Gas & water','Pressure systems','Solar install']),
@@ -133,7 +135,10 @@ function makeSeed(){
     job(8, KAMAU,'Bathroom refit — plumbing','Installation','High','Scheduled',3,'08:00',6,[MWANGI,ACHIENG]),
     job(10,MUTUA,'Toilet running water','Repair','Medium','Scheduled',4,'10:00',1.5,[KIPTOO]),
     job(11,CLINIC,'Boiler low pressure — inspect','Inspection','Medium','Scheduled',5,'09:00',2,[OTIENO]),
-    job(15,MUTUA,'Solar water heater 300L — supply & install','Solar','High','Scheduled',6,'08:00',8,[OTIENO])
+    job(15,MUTUA,'Solar water heater 300L — supply & install','Solar','High','Scheduled',6,'08:00',8,[OTIENO]),
+    job(16,NELLY,'Kitchen sink leak repair','Repair','Low','Completed',-1,'10:00',1,[KIPTOO]),
+    job(17,JOHN,'Water heater repair','Repair','Medium','Completed',-38,'10:00',2,[KIPTOO]),
+    job(18,JOHN,'Leak repair — kitchen','Repair','Low','Completed',-95,'09:00',1,[MWANGI])
   ];
   const findJob = t => jobs.find(j=>j.title.includes(t));
 
@@ -144,27 +149,27 @@ function makeSeed(){
 
   const quotes = [
     quote(5, PARK,'Guest WC unblock & descale','Declined',-8,-1,
-      [item('Labor','Unblock & descale — labor',2,'hr',1200),item('Material','Drain enzyme gel 500ml',2,'pcs',900),item('Labor','Travel fee — within-city',1,'trip',400)]),
+      [item('Labor','Unblock & descale — labor',2,'hr',1200),item('Material','Drain enzyme gel 500ml',2,'pcs',900),item('Transport','Travel fee — within-city',1,'trip',400)]),
     quote(3, KAREN,'Gutter clean & minor repair','Approved',-4,5,
-      [item('Labor','Gutter clean — labor',3,'hr',1200),item('Material','Silicone sealant tube',1,'pcs',650),item('Labor','Travel fee — outskirts',1,'trip',1200)]),
+      [item('Labor','Gutter clean — labor',3,'hr',1200),item('Material','Silicone sealant tube',1,'pcs',650),item('Transport','Travel fee — outskirts',1,'trip',1200)]),
     quote(1, KAMAU,'Bathroom refit — plumbing (1 WC)','Sent',-1,10,
       [item('Labor','Bathroom refit — labor',18,'hr',1200),item('Material','Mixer tap (basin)',1,'pcs',8500),
        item('Material','WC pan & cistern',1,'pcs',14500),item('Material','Shower column (thermo)',1,'pcs',9800),
        item('Material','PPR pipe 20mm',12,'m',420),item('Material','Bathroom fittings pack',1,'kit',4500),
-       item('Material','Silicone sealant tube',2,'pcs',650),item('Labor','Travel fee — within-city',1,'trip',400)],
+       item('Material','Silicone sealant tube',2,'pcs',650),item('Transport','Travel fee — within-city',1,'trip',400)],
       {jobId: findJob('Bathroom refit').id}),
     quote(4, NJERI,'Geyser 50L supply & install','Sent',-2,7,
       [item('Labor','Geyser install — labor (senior)',5,'hr',1800),item('Material','Geyser 50L',1,'pcs',24500),
        item('Material','Anode rod',1,'pcs',2200),item('Material','Check & foot valve',1,'kit',2800),
-       item('Labor','Travel fee — within-city',1,'trip',400)],
+       item('Transport','Travel fee — within-city',1,'trip',400)],
       {jobId: findJob('Geyser 50L').id}),
     quote(2, MUTUA,'Toilet repair — running water','Draft',0,14,
       [item('Labor','Toilet repair — running water',1.5,'hr',1200),item('Material','Toilet flapper kit',1,'kit',1450),
-       item('Material','Wax ring & bolts',1,'kit',800),item('Labor','Travel fee — outskirts',1,'trip',1200)]),
+       item('Material','Wax ring & bolts',1,'kit',800),item('Transport','Travel fee — outskirts',1,'trip',1200)]),
     quote(6, MUTUA,'Solar water heater 300L — supply & install','Sent',0,10,
       [item('Labor','Solar water heater 300L — labor (senior)',8,'hr',1800),item('Material','Solar water heater 300L (kit)',1,'kit',65000),
        item('Material','EV200 controller',1,'pcs',7500),item('Material','Mounting & piping kit (300L)',1,'kit',9800),
-       item('Labor','Travel fee — outskirts',1,'trip',1200)],
+       item('Transport','Travel fee — outskirts',1,'trip',1200)],
       {jobId: findJob('Solar water heater').id})
   ];
 
@@ -175,15 +180,15 @@ function makeSeed(){
 
   const invItems = [
     // 1..9
-    [item('Labor','Sink replacement — labor',2,'hr',1200),item('Material','P-trap 1.2"',1,'pcs',1200),item('Labor','Travel fee — within-city',1,'trip',400)],
-    [item('Labor','Drain rodding (2 lines) — labor',4,'hr',1200),item('Labor','Travel fee — within-city',1,'trip',400)],
-    [item('Labor','Annual boiler service — labor',6,'hr',1800),item('Material','Anode rod',1,'pcs',2200),item('Labor','Travel fee — within-city',1,'trip',400)],
-    [item('Labor','Geyser element swap — labor',2.5,'hr',1800),item('Material','Geyser element 2kW',1,'pcs',3800),item('Labor','Travel fee — within-city',1,'trip',400)],
-    [item('Labor','Pump repair & install — labor',4,'hr',1200),item('Material','Check & foot valve',1,'kit',2800),item('Material','Silicone sealant tube',1,'pcs',650),item('Labor','Travel fee — outskirts',1,'trip',1200)],
-    [item('Labor','Sink & tap replacement — labor',3,'hr',1200),item('Material','Mixer tap (basin)',1,'pcs',8500),item('Material','P-trap 1.2"',1,'pcs',1200),item('Labor','Travel fee — within-city',1,'trip',400)],
-    [item('Labor','Drain rodding & P-trap — labor',2,'hr',1200),item('Material','P-trap 1.2"',1,'pcs',1200),item('Material','Drain enzyme gel 500ml',2,'pcs',900),item('Material','Silicone sealant tube',1,'pcs',650),item('Labor','Travel fee — within-city',1,'trip',400)],
-    [item('Labor','Quarterly preventive maintenance — labor',4,'hr',1800),item('Material','Anode rod',1,'pcs',2200),item('Material','Silicone sealant tube',2,'pcs',650),item('Labor','Inspection & certification',1,'visit',4500),item('Labor','Travel fee — within-city',1,'trip',400)],
-    [item('Labor','Emergency callout & labor',3.5,'hr',1680),item('Material','CPVC pipe 25mm',2.5,'m',520),item('Material','Push-fit coupling 25mm',3,'pcs',220),item('Material','Angle valve 3/8',2,'pcs',1100),item('Labor','Travel fee — within-city',1,'trip',400)]
+    [item('Labor','Sink replacement — labor',2,'hr',1200),item('Material','P-trap 1.2"',1,'pcs',1200),item('Transport','Travel fee — within-city',1,'trip',400)],
+    [item('Labor','Drain rodding (2 lines) — labor',4,'hr',1200),item('Transport','Travel fee — within-city',1,'trip',400)],
+    [item('Labor','Annual boiler service — labor',6,'hr',1800),item('Material','Anode rod',1,'pcs',2200),item('Transport','Travel fee — within-city',1,'trip',400)],
+    [item('Labor','Geyser element swap — labor',2.5,'hr',1800),item('Material','Geyser element 2kW',1,'pcs',3800),item('Transport','Travel fee — within-city',1,'trip',400)],
+    [item('Labor','Pump repair & install — labor',4,'hr',1200),item('Material','Check & foot valve',1,'kit',2800),item('Material','Silicone sealant tube',1,'pcs',650),item('Transport','Travel fee — outskirts',1,'trip',1200)],
+    [item('Labor','Sink & tap replacement — labor',3,'hr',1200),item('Material','Mixer tap (basin)',1,'pcs',8500),item('Material','P-trap 1.2"',1,'pcs',1200),item('Transport','Travel fee — within-city',1,'trip',400)],
+    [item('Labor','Drain rodding & P-trap — labor',2,'hr',1200),item('Material','P-trap 1.2"',1,'pcs',1200),item('Material','Drain enzyme gel 500ml',2,'pcs',900),item('Material','Silicone sealant tube',1,'pcs',650),item('Transport','Travel fee — within-city',1,'trip',400)],
+    [item('Labor','Quarterly preventive maintenance — labor',4,'hr',1800),item('Material','Anode rod',1,'pcs',2200),item('Material','Silicone sealant tube',2,'pcs',650),item('Labor','Inspection & certification',1,'visit',4500),item('Transport','Travel fee — within-city',1,'trip',400)],
+    [item('Labor','Emergency callout & labor',3.5,'hr',1680),item('Material','CPVC pipe 25mm',2.5,'m',520),item('Material','Push-fit coupling 25mm',3,'pcs',220),item('Material','Angle valve 3/8',2,'pcs',1100),item('Transport','Travel fee — within-city',1,'trip',400)]
   ];
   const inv7 = tot(invItems[6]);
   const invoices = [
@@ -195,9 +200,18 @@ function makeSeed(){
     invoice(6, KAMAU, findJob('Kitchen sink & tap').id, invItems[5], -20, -6, [{date:D(-16),amount:7500,method:'M-Pesa',note:'Partial'}]),
     invoice(7, PARK, findJob('Kitchen sink drain').id, invItems[6], -4, 10, [{date:D(-3),amount:inv7,method:'M-Pesa',note:''}]),
     invoice(8, CLINIC, findJob('Quarterly maintenance').id, invItems[7], -1, 13, []),
-    invoice(9, HASSAN, findJob('Burst pipe').id, invItems[8], 0, 14, [])
+    invoice(9, HASSAN, findJob('Burst pipe').id, invItems[8], 0, 14, [{date:D(0),amount:5000,method:'M-Pesa',note:'Advance — work on site'}]),
+    invoice(10, JOHN, findJob('Water heater repair').id,
+      [item('Labor','Geyser element swap — labor',2.5,'hr',1800),item('Material','Geyser element 2kW',1,'pcs',3800),item('Transport','Travel fee — within-city',1,'trip',400)],
+      -36,-22,[]),
+    invoice(11, JOHN, findJob('Leak repair — kitchen').id,
+      [item('Labor','Leak repair — labor',2,'hr',1200),item('Material','PVC pipe 25mm',1.5,'m',480),
+       item('Material','Push-fit coupling 25mm',2,'pcs',220),item('Transport','Travel fee — within-city',1,'trip',400)],
+      -93,-79,[])
   ];
   invoices[6].status = 'Open';
+  invoices[9].payments = [{date:D(-34),amount:tot(invoices[9].items),method:'M-Pesa',note:''}];
+  invoices[10].payments = [{date:D(-70),amount:4000,method:'Cash',note:'Partial'}];
 
   const INV = (name,sku,category,unit,qty,reorder,cost,price,location,history=[]) => ({id:uid('i'),name,sku,category,unit,qty,reorder,cost,price,location,history});
   const inventory = [
@@ -255,18 +269,55 @@ function makeSeed(){
      createdAt:new Date(Date.now()-3*86400e3).toISOString(), sent:true}
   ];
 
+  const lead = (n,name,phone,service,location,budget,source,status,notes,extra={}) => Object.assign({
+    id:uid('l'), ref:`LEAD-${Y}-${pad4(n)}`, name, phone, service, location, budget, source, status, notes,
+    customerId:null, quoteRef:null, jobRef:null
+  }, extra);
+  const leads = [
+    lead(1,'John Mwangi','0798 334 120','Bathroom pipe repair','Kilimani',15000,'Repeat','New',
+      'Burst pipe in master bathroom. Existing customer — 2 previous jobs.',{createdAt:D(-1)}),
+    lead(2,'Faith Otieno','0722 118 903','Geyser not heating','Runda',8000,'Walk-in','Contacted',
+      'Called this morning. Available tomorrow after 2pm.',{createdAt:D(-2)}),
+    lead(3,'Baraza Mall Facilities','0733 764 210','Restroom drainage overhaul','CBD',120000,'Referral','Quoted',
+      'Referred by Muthaiga Clinic. Site visit done — quote sent, follow up Thursday.',
+      {createdAt:D(-6),quoteRef:`QUO-${Y}-0003`}),
+    lead(4,'Samuel Kariuki','0711 902 455','Solar water heater quote','Lavington',70000,'Online ad','Quoted',
+      'Wants a 300L system with EV200. Sent brochure, follow up Friday.',{createdAt:D(-4)}),
+    lead(5,'Nelly Achieng','0745 220 318','Kitchen sink leak','Embakasi',6000,'WhatsApp','Won',
+      'Job completed — see customer history.',{createdAt:D(-2),jobRef:`JOB-${Y}-0016`,customerId:NELLY.id})
+  ];
+
+  const exp = (off,category,description,amount) => ({id:uid('e'), date:D(off), category, description, amount});
+  const expenses = [
+    exp(-1,'Fuel','Vehicle fuel (KDC 254K) — pickup',3200),
+    exp(-2,'Materials purchase','P-traps, couplings & fittings',4600),
+    exp(-8,'Tools','Pipe bender blades',2400),
+    exp(-12,'Shop rent','Workshop rent (shared unit)',8000),
+    exp(-15,'Fuel','Vehicle fuel',3000),
+    exp(-20,'Subcontractor','Tiler helper — bathroom refit (day rate)',5000),
+    exp(-25,'Vehicle','Tyres (2) + full service',9500),
+    exp(-35,'Materials purchase','PPR pipe & valves bulk order',14200),
+    exp(-45,'Shop rent','Workshop rent (shared unit)',8000),
+    exp(-52,'Fuel','Vehicle fuel',2800),
+    exp(-60,'Tools','Drain auger replacement (6m)',8900),
+    exp(-70,'Materials purchase','CPVC pipe + fittings',9800),
+    exp(-85,'Shop rent','Workshop rent (shared unit)',8000),
+    exp(-100,'Fuel','Vehicle fuel',2600),
+    exp(-120,'Vehicle','Full service + oil change',7400)
+  ];
+
   return {
     v:1,
-    counters:{job:15, quote:6, invoice:9},
+    counters:{job:18, quote:6, invoice:11, lead:5},
     business:{
-      name:'AquaFlow Plumbing Ltd', phone:'+254 712 345 678', whatsapp:'254712345678',
+      name:'AquaFlow Plumbing Ltd', ownerName:'Victor', phone:'+254 712 345 678', whatsapp:'254712345678',
       email:'hello@aquaflow.co.ke', address:'12 Riverside Avenue, Westlands, Nairobi',
       vatRate:16, dueDays:14, currency:'KES',
       rates:{standard:1200, senior:1800, apprentice:900},
       travel:{city:400, outskirts:1200, county:2500},
-      prefixes:{job:'JOB', quote:'QUO', invoice:'INV'},
+      prefixes:{job:'JOB', quote:'QUO', invoice:'INV', lead:'LEAD'},
       templates:{...DEFAULT_TEMPLATES}
     },
-    customers, technicians, jobs, quotes, invoices, inventory, maintenance, outbox
+    customers, technicians, jobs, quotes, invoices, inventory, maintenance, outbox, leads, expenses
   };
 }

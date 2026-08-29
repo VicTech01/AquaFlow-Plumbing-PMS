@@ -13,16 +13,17 @@ VIEWS.jobs = {
         <div class="tabs">
           <button data-tab="cal" class="${jtab==='cal'?'active':''}">Calendar</button>
           <button data-tab="list" class="${jtab==='list'?'active':''}">List</button>
+          <button data-tab="pipe" class="${jtab==='pipe'?'active':''}">Pipeline</button>
         </div>
       </div>
       <button class="btn primary" id="j-new">${icon('plus',15)} New job</button>
     </div>
-    ${jtab === 'cal' ? jobsCalendarHTML() : jobsListHTML()}`;
+    ${jtab === 'cal' ? jobsCalendarHTML() : jtab === 'list' ? jobsListHTML() : jobsPipelineHTML()}`;
   },
   mount(){
     $$('#content .tabs button').forEach(b => b.onclick = () => { jtab = b.dataset.tab; reRender(); });
     $('#j-new').onclick = () => jobModal({});
-    if(jtab === 'cal') jobsCalMount(); else jobsListMount();
+    if(jtab === 'cal') jobsCalMount(); else if(jtab==='list') jobsListMount(); else jobsPipelineMount();
   }
 };
 
@@ -160,6 +161,59 @@ function jobsListMount(){
   apply();
 }
 
+/* ================= pipeline view (Quote→Scheduled→In Progress→Completed→Invoiced→Paid) ================= */
+function jobsPipelineHTML(){
+  const active = db.jobs.filter(j => j.status !== 'Cancelled' && jobStage(j) < 5)
+    .sort((a,b) => jobStage(a)-jobStage(b) || (a.date+a.start).localeCompare(b.date+b.start));
+  const closed = db.jobs.filter(j => jobStage(j) === 5)
+    .sort((a,b) => (b.date+b.start).localeCompare(a.date+a.start));
+  const row = j => {
+    const c = customerById(j.customerId);
+    const na = jobNextAction(j);
+    const actBtn = na.act==='done'
+      ? `<button class="btn ghost sm" data-na="done" data-job="${j.id}">${na.label}</button>`
+      : `<button class="btn ${na.act==='collect'?'green':'primary'} sm" data-na="${na.act}" data-job="${j.id}">${na.label}</button>`;
+    return `<tr class="pp-row">
+      <td><b>${TYPE_EMOJI[j.type]||''} ${esc(j.title)}</b><div class="subrow">${j.ref} · ${fmtDateShort(j.date)} ${j.start}</div></td>
+      <td class="resp-sm">${esc(c?c.name:'—')}</td>
+      <td class="pp-stepper-cell">${stepperHTML(j)}</td>
+      <td class="num resp-sm">${j.hours}h</td>
+      <td style="min-width:130px">${actBtn}</td>
+    </tr>`;
+  };
+  return `
+  <div class="card">
+    <div class="row mb12" style="flex-wrap:wrap;gap:8px">
+      <b class="small">${PIPELINE.length===6?'Full pipeline':'Pipeline'}</b>
+      <span class="muted small">Lead → Quotation → Scheduled → In Progress → Completed → Invoiced → Paid</span>
+      <span class="muted small" style="margin-left:auto">${active.length} in flight · ${closed.length} paid off</span>
+    </div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Job</th><th class="resp-sm">Customer</th><th class="resp-md">Pipeline</th><th class="num resp-sm">Hrs</th><th>Next action</th></tr></thead>
+      <tbody>
+        ${active.length ? active.map(row).join('') : '<tr><td colspan="5" class="empty">Nothing in flight 🎉</td></tr>'}
+        ${closed.length ? `<tr class="pp-sep"><td colspan="5">✓ Recently paid off</td></tr>` + closed.slice(0,6).map(row).join('') : ''}
+      </tbody>
+    </table></div>
+  </div>`;
+}
+function jobsPipelineMount(){
+  $$('#content [data-na]').forEach(btn => btn.onclick = () => {
+    const j = jobById(btn.dataset.job);
+    if(!j) return;
+    const na = btn.dataset.na;
+    const inv = jobInvoice(j);
+    if(na==='quote'){ go('quote_edit', {jobId: j.id}); }
+    else if(na==='dispatch'){ go('dispatch'); }
+    else if(na==='start'){ j.status='In Progress'; commit(); toast(`${j.ref} started`); reRender(); }
+    else if(na==='complete'){ j.status='Completed'; commit(); toast(`Job ${j.ref} completed`); reRender(); }
+    else if(na==='invoice'){ go('invoice_new', {jobId: j.id}); }
+    else if(na==='collect'){ payModal(inv); }
+    else if(na==='resume'){ j.status='Scheduled'; commit(); toast(`${j.ref} resumed`); reRender(); }
+    else if(na==='done'){ openJobModal(j.id); }
+  });
+}
+
 /* ================= job create/edit modal ================= */
 const JOB_TYPES = ['Repair','Installation','Maintenance','Service','Inspection','Emergency','Solar','Drainage','Gas','Water supply'];
 const JOB_STATUSES = ['Scheduled','Dispatched','In Progress','Completed','On Hold','Cancelled'];
@@ -238,6 +292,103 @@ function jobModal(prefill = {}, afterSave){
   });
 }
 
+/* ================= job income breakdown ================= */
+function jobIncomeCardHTML(j){
+  const inv = jobInvoice(j);
+  const q = inv ? null : jobQuote(j);
+  if(!inv && !q) return '';
+  const items = inv ? inv.items : q.items;
+  const b = breakdown(items);
+  return `
+  <div class="card mt12">
+    <div class="row mb8"><h3 style="margin:0">${icon('cash',15)} ${inv ? `Job income — ${inv.ref}` : 'Quoted estimate (no invoice yet)'}</h3>
+      <span class="muted small" style="margin-left:auto">${inv?chip(invState(inv).label):chip(q.status)}</span></div>
+    <div class="bd-grid">
+      <div class="bd-col">
+        <div class="bd-row"><span>Labour</span><b>${money(b.labour)}</b></div>
+        <div class="bd-row"><span>Materials</span><b>${money(b.materials)}</b></div>
+        <div class="bd-row"><span>Transport</span><b>${money(b.transport)}</b></div>
+        <div class="bd-row tot"><span>Total (excl. VAT)</span><b>${money(b.labour+b.materials+b.transport)}</b></div>
+      </div>
+      ${inv ? `<div class="bd-col">
+        <div class="bd-row"><span>VAT ${inv.vatRate||0}%</span><b>${money(invTotal(inv)-invSubtotal(inv))}</b></div>
+        <div class="bd-row"><span>Grand total</span><b>${money(invTotal(inv))}</b></div>
+        <div class="bd-row"><span>Amount paid</span><b class="ok">${money(invPaid(inv))}</b></div>
+        <div class="bd-row bal"><span>Balance due</span><b>${money(invBalance(inv))}</b></div>
+      </div>` : `<div class="bd-col">
+        <div class="bd-row"><span>VAT ${q.vatRate||0}%</span><b>${money(quoteTotal(q)-quoteSubtotal(q))}</b></div>
+        <div class="bd-row tot"><span>Quoted total</span><b>${money(quoteTotal(q))}</b></div>
+        <div class="bd-row muted small"><span>Valid until</span><b>${fmtDate(q.validUntil)}</b></div>
+      </div>`}
+    </div>
+  </div>`;
+}
+
+/* ================= materials used on job (auto stock deduction) ================= */
+function matRowHTML(){
+  const opts = `<option value="">Select item…</option>` +
+    db.inventory.map(x=>`<option value="${x.id}">${esc(x.name)} — ${x.qty} ${esc(x.unit)} @ ${money(x.price)}</option>`).join('');
+  return `<tr>
+    <td><select class="inp mm-item">${opts}</select></td>
+    <td class="num" style="width:86px"><input class="inp mm-qty num" type="number" min="0.25" step="0.25" value="1"></td>
+    <td class="num mm-price muted small" style="width:90px">—</td>
+    <td style="width:34px"><button class="btn icon ghost mm-rm" title="Remove">✕</button></td>
+  </tr>`;
+}
+function materialsModal(job){
+  const inv = jobInvoice(job);
+  openModal(`Materials used — ${job.ref}`, `
+    <p class="muted small">Select what was consumed on this job. Stock is deducted immediately and logged to item history${inv?`, and each line is added to <b>${inv.ref}</b> so the customer is billed`:' (no invoice yet — stock deducted, invoice the job to bill it)'}. Low-stock alerts apply.</p>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Item (from inventory)</th><th class="num">Qty</th><th class="num">Unit price</th><th></th></tr></thead>
+      <tbody id="mm-body">${matRowHTML()}</tbody>
+    </table></div>
+    <button class="btn ghost sm mt8" id="mm-add">${icon('plus',14)} Add line</button>
+  `, {
+    width:'md',
+    footerHtml:`<button class="btn ghost" id="mm-x">Cancel</button><button class="btn primary" id="mm-save">${icon('box',15)} Record & deduct stock</button>`,
+    onMount(){
+      const body = $('#mm-body');
+      const bind = () => {
+        $$('#mm-body tr').forEach(tr => {
+          tr.querySelector('.mm-item').onchange = e => {
+            const it = invItemById(e.target.value);
+            tr.querySelector('.mm-price').textContent = it ? money(it.price) : '—';
+          };
+          tr.querySelector('.mm-rm').onclick = () => {
+            if($$('#mm-body tr').length > 1) tr.remove();
+            else { body.innerHTML = matRowHTML(); bind(); }
+          };
+        });
+      };
+      bind();
+      $('#mm-x').onclick = closeModal;
+      $('#mm-add').onclick = () => { body.insertAdjacentHTML('beforeend', matRowHTML()); bind(); };
+      $('#mm-save').onclick = () => {
+        const rows = $$('#mm-body tr').map(tr => ({
+          item: invItemById(tr.querySelector('.mm-item').value),
+          qty: parseFloat(tr.querySelector('.mm-qty').value) || 0
+        })).filter(r => r.item && r.qty > 0);
+        if(!rows.length){ toast('Pick at least one item and quantity','warn'); return; }
+        const warns = [];
+        rows.forEach(r => {
+          const it = r.item;
+          if(it.qty < r.qty) warns.push(`${it.name}: only ${it.qty} in stock — deducted all of it`);
+          const take = Math.min(it.qty, r.qty);
+          it.qty -= take;
+          it.history = it.history || [];
+          it.history.unshift({at:isoDate(today()), delta:-r.qty, reason:`Used on ${job.ref}`});
+          if(inv) inv.items.push({kind:'Material', desc:it.name, qty:r.qty, unit:it.unit, price:it.price, invId:it.id});
+        });
+        commit(); closeModal();
+        toast(`Recorded ${rows.length} material line(s) on ${job.ref}${inv?` — billed to ${inv.ref}`:''}`);
+        warns.forEach(w => toast(w,'warn'));
+        reRender(); openJobModal(job.id);
+      };
+    }
+  });
+}
+
 /* ================= job detail modal ================= */
 function openJobModal(id){
   const j = jobById(id);
@@ -251,6 +402,7 @@ function openJobModal(id){
       <span class="muted small">${fmtDateFull(j.date)} · ${j.start} · ${j.hours}h</span>
     </div>
     ${conflicts.length ? `<div class="badge-warn">${icon('alert',15)} Overlap: technician double-booked with ${conflicts.map(o=>o.ref).join(', ')}. Reassign or reschedule in Dispatch.</div>` : ''}
+    <div class="card pipe-card">${stepperHTML(j)}</div>
     <div class="grid2" style="grid-template-columns:1fr 1fr">
       <div class="card" style="background:#f8fafc">
         <h3>Customer</h3>
@@ -275,9 +427,11 @@ function openJobModal(id){
       </div>
     </div>
     ${j.notes ? `<div class="badge-info">${icon('doc',14)} ${esc(j.notes)}</div>` : ''}
+    ${jobIncomeCardHTML(j)}
     <div class="row mt12" style="flex-wrap:wrap">
       <button class="btn ghost sm jd-quote">${icon('spark',14)} Create quotation</button>
       <button class="btn ghost sm jd-inv">${icon('receipt',14)} Create invoice</button>
+      <button class="btn ghost sm jd-mats" ${j.status==='Cancelled'?'disabled':''}>${icon('box',14)} Record materials used</button>
       <button class="btn green sm jd-done" ${j.status==='Completed'?'disabled':''}>✓ Mark completed</button>
       <button class="btn ghost sm jd-hold" ${j.status==='On Hold'?'disabled':''}>⏸ Put on hold</button>
       <button class="btn danger sm jd-cancel" ${j.status==='Cancelled'?'disabled':''}>Cancel job</button>
@@ -298,6 +452,7 @@ function openJobModal(id){
       });
       $('.jd-quote').onclick = () => { closeModal(); go('quote_edit', {jobId: j.id}); };
       $('.jd-inv').onclick = () => { closeModal(); go('invoice_new', {jobId: j.id}); };
+      $('.jd-mats').onclick = () => materialsModal(j);
       $('.jd-done').onclick = () => askConfirm(`Mark <b>${esc(j.title)}</b> as completed?`, () => { j.status='Completed'; commit(); toast(`Job ${j.ref} completed`); done(); }, {danger:false, label:'Complete job'});
       $('.jd-hold').onclick = () => { j.status='On Hold'; commit(); done(); };
       $('.jd-cancel').onclick = () => askConfirm(`Cancel <b>${esc(j.title)}</b>?`, () => { j.status='Cancelled'; commit(); done(); });

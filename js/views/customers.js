@@ -128,9 +128,11 @@ VIEWS.customer = {
         </div>
       </div>
       <div class="row mt16" style="gap:26px;flex-wrap:wrap;font-size:13px">
-        <div><span class="muted small">Jobs</span><div class="bold" style="font-size:17px">${jobs.length}</div></div>
+        <div><span class="muted small">Total jobs</span><div class="bold" style="font-size:17px">${jobs.length}</div></div>
+        <div><span class="muted small">Total revenue</span><div class="bold" style="font-size:17px">${money(sum(invoices, invTotal))}</div></div>
         <div><span class="muted small">Lifetime paid</span><div class="bold" style="font-size:17px">${money(spent)}</div></div>
         <div><span class="muted small">Outstanding</span><div class="bold" style="font-size:17px;color:${outstanding>0?'var(--red)':'var(--green)'}">${money(outstanding)}</div></div>
+        ${jobs.length ? `<div><span class="muted small">Last job</span><div class="bold" style="font-size:13px;line-height:1.4">${esc(jobs[0].title)}<br><span class="muted small" style="font-weight:400">${fmtDateShort(jobs[0].date)}</span></div></div>` : ''}
       </div>
     </div>
 

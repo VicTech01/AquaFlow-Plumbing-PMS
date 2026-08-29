@@ -145,7 +145,7 @@ VIEWS.invoice = {
         <div class="tbl-wrap"><table class="tbl">
           <thead><tr><th>Description</th><th>Qty</th><th class="num">Unit</th><th class="num">Amount</th></tr></thead>
           <tbody>
-            ${inv.items.map(i=>`<tr><td>${i.kind==='Material'?'🔩':'🛠'} ${esc(i.desc)}</td><td class="num">${i.qty}</td><td class="num">${money(i.price)} ${esc(i.unit||'')}</td><td class="num">${money(i.qty*i.price)}</td></tr>`).join('')}
+            ${inv.items.map(i=>`<tr><td>${i.kind==='Material'?'🔩':i.kind==='Transport'?'🚚':'🛠'} ${esc(i.desc)}</td><td class="num">${i.qty}</td><td class="num">${money(i.price)} ${esc(i.unit||'')}</td><td class="num">${money(i.qty*i.price)}</td></tr>`).join('')}
           </tbody>
           <tfoot>
             <tr><td colspan="3" class="muted">Subtotal</td><td class="num">${money(invSubtotal(inv))}</td></tr>
@@ -165,6 +165,10 @@ VIEWS.invoice = {
               <tr><td>${fmtDate(p.date)}<div class="subrow">${esc(p.note||'')}</div></td><td>${esc(p.method)}</td><td class="num">${money(p.amount)}</td></tr>`).join('')}
             </tbody></table></div>` : '<div class="empty small">No payments recorded yet.</div>'}
           ${st.balance > 0 ? `<button class="btn primary sm mt12" id="inv-pay2">${icon('cash',14)} Record payment</button>` : ''}
+        </div>
+        <div class="card">
+          <h3>${icon('cash',15)} Income breakdown</h3>
+          ${breakdownHTML(inv.items)}
         </div>
         ${job ? `<div class="card" style="background:#f8fafc">
           <h3>${icon('calendar',15)} Linked job</h3>

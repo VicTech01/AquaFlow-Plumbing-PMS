@@ -5,8 +5,8 @@ const path = require('path');
 const { JSDOM } = require('jsdom');
 
 const files = ['js/utils.js','js/seed.js','js/app.js',
-  'js/views/dashboard.js','js/views/jobs.js','js/views/dispatch.js','js/views/customers.js',
-  'js/views/quotes.js','js/views/invoices.js','js/views/inventory.js','js/views/maintenance.js',
+  'js/views/dashboard.js','js/views/leads.js','js/views/jobs.js','js/views/dispatch.js','js/views/customers.js',
+  'js/views/quotes.js','js/views/invoices.js','js/views/expenses.js','js/views/inventory.js','js/views/maintenance.js',
   'js/views/whatsapp.js','js/views/settings.js','js/main.js'];
 
 const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');

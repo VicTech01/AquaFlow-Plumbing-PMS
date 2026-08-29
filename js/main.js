@@ -2,11 +2,13 @@
 /* ================= bootstrap ================= */
 const NAV = [
   ['dashboard','Dashboard','dashboard'],
+  ['leads','Leads & Pipeline','userPlus'],
   ['jobs','Jobs & Scheduling','calendar'],
   ['dispatch','Dispatch','truck'],
   ['customers','Customers','users'],
   ['quotes','Quotations','doc'],
   ['invoices','Invoices & Payments','receipt'],
+  ['expenses','Expenses','cash'],
   ['inventory','Inventory','box'],
   ['maintenance','Maintenance','wrench'],
   ['whatsapp','WhatsApp','wa'],
@@ -44,6 +46,7 @@ function openMoreSheet(){
   const nLow = db.inventory.filter(i => i.qty <= i.reorder).length;
   const nDue = db.maintenance.filter(m => dayDiff(t, nextDueDate(m)) <= 14).length;
   const nWa = db.outbox.filter(o => !o.sent).length;
+  const nLead = db.leads.filter(l => l.status === 'New').length;
   const jobsToday = db.jobs.filter(j => j.date === t && !['Cancelled','Completed'].includes(j.status)).length;
   sheetOpen(`
     <div class="sheet-grab"></div>
@@ -55,6 +58,8 @@ function openMoreSheet(){
       <button class="btn ghost sm" data-act="pay">${icon('cash',14)} Collect</button>
     </div>
     <div class="sheet-grid">
+      <button class="sheet-item" data-goto="leads"><span class="ic">${icon('userPlus',17)}</span>Leads &amp; Pipeline${badge(nLead,'sky')}</button>
+      <button class="sheet-item" data-goto="expenses"><span class="ic">${icon('cash',17)}</span>Expenses</button>
       <button class="sheet-item" data-goto="quotes"><span class="ic">${icon('doc',17)}</span>Quotations${badge(nSentQ,'violet')}</button>
       <button class="sheet-item" data-goto="invoices"><span class="ic">${icon('receipt',17)}</span>Invoices${badge(nOverdue,'red')}</button>
       <button class="sheet-item" data-goto="inventory"><span class="ic">${icon('box',17)}</span>Inventory${badge(nLow)}</button>
@@ -81,7 +86,9 @@ function openActionsSheet(){
     <div class="sheet-head"><h3>Create new</h3><button class="x" data-close>✕</button></div>
     <div class="sheet-grid" style="grid-template-columns:1fr 1fr;padding-top:6px">
       <button class="sheet-item" data-act="job"><span class="ic">${icon('calendar',17)}</span>Schedule job</button>
+      <button class="sheet-item" data-act="lead"><span class="ic">${icon('userPlus',17)}</span>New lead</button>
       <button class="sheet-item" data-act="quote"><span class="ic">${icon('spark',17)}</span>AI quotation</button>
+      <button class="sheet-item" data-act="exp"><span class="ic">${icon('cash',17)}</span>Record expense</button>
       <button class="sheet-item" data-act="invoice"><span class="ic">${icon('receipt',17)}</span>Invoice</button>
       <button class="sheet-item" data-act="pay"><span class="ic">${icon('cash',17)}</span>Collect payment</button>
     </div>`);
@@ -90,7 +97,9 @@ function openActionsSheet(){
     const a = b.dataset.act;
     sheetClose();
     if(a === 'job') jobModal({});
+    else if(a === 'lead') go('leads', {});
     else if(a === 'quote') go('quote_edit', {});
+    else if(a === 'exp') go('expenses', {});
     else if(a === 'invoice') go('invoice_new', {});
     else if(a === 'pay') quickRecordPayment();
   });
@@ -118,8 +127,11 @@ function initApp(){
   go('dashboard', {});
   window.API = {
     get db(){ return db; },
+    get ui(){ return ui; },
     go, openModal, closeModal, toast, waLink, chip, invState, invBalance, invTotal,
+    invSubtotal, invPaid, jobStage, jobNextAction, jobInvoice, jobById, reRender,
     pushOutbox, aiGenerate, quoteTotal, openJobModal, jobModal, payModal,
+    guessJobType, breakdown, greeting, monthKey,
     openMoreSheet, openActionsSheet, sheetClose
   };
 }

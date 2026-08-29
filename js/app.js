@@ -218,6 +218,113 @@ function donut(segs, {size=150, thick=20} = {}){
   return `<svg viewBox="0 0 ${size} ${size}" style="width:${size}px;height:${size}px">${arcs}</svg>`;
 }
 
+/* ================= business pipeline (Lead→Quote→Scheduled→In Progress→Completed→Invoiced→Paid) ================= */
+const PIPELINE = ['Quote','Scheduled','In Progress','Completed','Invoiced','Paid'];
+function jobInvoice(job){ return db.invoices.find(i=>i.jobId===job.id) || null; }
+function jobQuote(job){ return db.quotes.find(q=>q.jobId===job.id) || null; }
+function jobHasQuote(job){ return db.quotes.some(q=>q.jobId===job.id && q.status!=='Declined'); }
+function jobStage(job){
+  let s = 0;
+  if(jobHasQuote(job)) s = Math.max(s, 1);
+  if(job.status==='Scheduled') s = Math.max(s, 1);
+  if(job.status==='Dispatched' || job.status==='In Progress') s = Math.max(s, 2);
+  if(job.status==='Completed') s = Math.max(s, 3);
+  const inv = jobInvoice(job);
+  if(inv) s = Math.max(s, 4);
+  if(inv && invBalance(inv) <= 0) s = 5;
+  return s;
+}
+function jobNextAction(job){
+  if(job.status==='Cancelled') return {label:'—', act:'none'};
+  const inv = jobInvoice(job);
+  if(job.status==='On Hold') return {label:'Resume', act:'resume'};
+  if(job.status==='Scheduled'){
+    if(!jobHasQuote(job)) return {label:'Create quote', act:'quote'};
+    return {label: (job.technicianIds||[]).length ? 'Dispatch' : 'Assign crew', act:'dispatch'};
+  }
+  if(job.status==='Dispatched') return {label:'Start work', act:'start'};
+  if(job.status==='In Progress') return {label:'Complete job', act:'complete'};
+  if(!inv) return {label:'Create invoice', act:'invoice'};
+  if(invBalance(inv) > 0) return {label:'Collect payment', act:'collect'};
+  return {label:'✓ Paid', act:'done'};
+}
+function stepperHTML(job){
+  const stage = jobStage(job);
+  return `<div class="stepper">${PIPELINE.map((s,i)=>`<span class="st ${i<stage?'done':i===stage?'cur':'todo'}" title="${s}"><i></i><span>${s}</span></span>`).join('')}</div>`;
+}
+
+/* ================= income breakdown (Labour / Materials / Transport) ================= */
+function breakdown(items){
+  const b = {labour:0, materials:0, transport:0};
+  (items||[]).forEach(i=>{
+    const amt = (i.qty||0) * (i.price||0);
+    if(i.kind==='Material') b.materials += amt;
+    else if(i.kind==='Transport') b.transport += amt;
+    else b.labour += amt;
+  });
+  return b;
+}
+function breakdownHTML(items){
+  const b = breakdown(items);
+  const row = (lbl, val) => `<div class="bd-row"><span>${lbl}</span><b>${money(val)}</b></div>`;
+  return row('Labour', b.labour) + row('Materials', b.materials) + row('Transport', b.transport)
+    + `<div class="bd-row tot"><span>Total</span><b>${money(b.labour+b.materials+b.transport)}</b></div>`;
+}
+function greeting(){
+  const h = new Date().getHours();
+  const part = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+  const name = (db.business?.ownerName || 'Boss').trim().toUpperCase() || 'BOSS';
+  return { part, text: `Good ${part}, ${name}` };
+}
+function expMonthTotal(mk){
+  return sum(db.expenses.filter(e=>e.date.startsWith(mk)), e=>e.amount);
+}
+
+/* ================= additional charts ================= */
+function groupedBar(valsA, valsB, labels, {w=640, h=200, colorA='#0369a1', colorB='#dc2626', legendA='Revenue', legendB='Expenses', fmt=money}={}){
+  const max = Math.max(1, ...valsA, ...valsB);
+  const padL=10, padR=10, padT=30, padB=24;
+  const iw = w-padL-padR, ih = h-padT-padB;
+  const groupW = iw/valsA.length;
+  const barW = Math.min(24, groupW/3);
+  const bar = (x, v, color) => {
+    const bh = Math.max(v>0?2:0, (v/max)*ih);
+    return `<rect x="${x.toFixed(1)}" y="${(padT+ih-bh).toFixed(1)}" width="${barW}" height="${bh.toFixed(1)}" rx="3" fill="${color}"><title>${fmt(v)}</title></rect>`;
+  };
+  const bars = labels.map((lb,i)=>{
+    const cx = padL + i*groupW + groupW/2;
+    return bar(cx-barW-2, valsA[i], colorA) + bar(cx+2, valsB[i], colorB);
+  }).join('');
+  const lbs = labels.map((lb,i)=>`<text x="${(padL+i*groupW+groupW/2).toFixed(1)}" y="${h-8}" text-anchor="middle" font-size="10" fill="var(--muted)">${esc(lb||'')}</text>`).join('');
+  const legend = `<text x="${w-padR-4}" y="14" text-anchor="end" font-size="10" font-weight="700"><tspan fill="${colorA}">■ ${legendA}</tspan><tspan dx="10" fill="${colorB}">■ ${legendB}</tspan></text>`;
+  return `<svg viewBox="0 0 ${w} ${h}" class="chart" preserveAspectRatio="xMidYMid meet">${legend}${bars}${lbs}</svg>`;
+}
+function barChart(vals, labels, {w=640, h=200, color='#0f766e', fmt=fmtInt}={}){
+  const max = Math.max(1, ...vals);
+  const padL=10, padR=10, padT=18, padB=24;
+  const iw = w-padL-padR, ih = h-padT-padB;
+  const groupW = iw/vals.length;
+  const barW = Math.min(34, groupW*0.55);
+  const bars = vals.map((v,i)=>{
+    const bh = Math.max(v>0?2:0, (v/max)*ih);
+    const x = padL + i*groupW + (groupW-barW)/2;
+    return `<rect x="${x.toFixed(1)}" y="${(padT+ih-bh).toFixed(1)}" width="${barW}" height="${bh.toFixed(1)}" rx="4" fill="${color}" opacity="${v?1:0.25}"><title>${fmt(v)}</title></rect>`
+      + (v ? `<text x="${(x+barW/2).toFixed(1)}" y="${(padT+ih-bh-5).toFixed(1)}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--muted)">${fmt(v)}</text>` : '');
+  }).join('');
+  const lbs = labels.map((lb,i)=>`<text x="${(padL+i*groupW+groupW/2).toFixed(1)}" y="${h-8}" text-anchor="middle" font-size="10" fill="var(--muted)">${esc(lb||'')}</text>`).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" class="chart" preserveAspectRatio="xMidYMid meet">${bars}${lbs}</svg>`;
+}
+function hbarList(rows, {fmt=money, color='#0369a1'}={}){
+  const max = Math.max(1, ...rows.map(r=>r.value));
+  if(!rows.length) return '<div class="empty mini">No data yet</div>';
+  return `<div class="hbars">` + rows.map(r=>`
+    <div class="hbar-row">
+      <span class="hbar-lbl" title="${esc(r.label)}">${esc(r.label)}</span>
+      <div class="hbar"><i style="width:${Math.max(2, r.value/max*100).toFixed(1)}%;background:${r.color||color}"></i></div>
+      <b class="hbar-val">${fmt(r.value)}</b>
+    </div>`).join('') + `</div>`;
+}
+
 /* ================= shared line-item editor (quotes & invoices) ================= */
 function itemRowHTML(it, i){
   const stockOpts = `<option value="">Priced manually…</option>` +
@@ -225,7 +332,8 @@ function itemRowHTML(it, i){
   return `<tr data-i="${i}">
     <td style="width:96px"><select class="inp ksel" title="Line type">
       <option ${it.kind==='Labor'?'selected':''}>Labor</option>
-      <option ${it.kind==='Material'?'selected':''}>Material</option></select></td>
+      <option ${it.kind==='Material'?'selected':''}>Material</option>
+      <option ${it.kind==='Transport'?'selected':''}>Transport</option></select></td>
     <td><input class="inp isel" value="${esc(it.desc)}" placeholder="Description"></td>
     <td style="width:72px"><input class="inp qsel num" type="number" min="0" step="0.25" value="${it.qty}"></td>
     <td style="width:56px" class="muted small unitcell">${esc(it.unit||'')}</td>

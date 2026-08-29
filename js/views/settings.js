@@ -27,6 +27,7 @@ VIEWS.settings = {
           <h3>${icon('doc',15)} Business profile</h3>
           <div class="form-grid">
             <div class="field span2"><label>Business name</label><input class="inp" id="st-name" value="${esc(b.name)}"></div>
+            <div class="field"><label>Owner name (dashboard greeting)</label><input class="inp" id="st-owner" value="${esc(b.ownerName||'')}" placeholder="e.g. Victor"></div>
             <div class="field"><label>Phone</label><input class="inp" id="st-phone" value="${esc(b.phone)}"></div>
             <div class="field"><label>WhatsApp number (digits, intl)</label><input class="inp" id="st-wa" value="${esc(b.whatsapp)}" placeholder="254712345678"></div>
             <div class="field"><label>Email</label><input class="inp" id="st-email" value="${esc(b.email)}"></div>
@@ -85,6 +86,7 @@ VIEWS.settings = {
     const n = id => parseFloat($(id).value) || 0;
     $('#st-save').onclick = () => {
       b.name = $('#st-name').value.trim() || b.name;
+      b.ownerName = $('#st-owner').value.trim();
       b.phone = $('#st-phone').value.trim();
       b.whatsapp = $('#st-wa').value.replace(/\D/g,'');
       b.email = $('#st-email').value.trim();
