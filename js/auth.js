@@ -309,8 +309,13 @@ AUTH.renderAuth = function(initialMode){
     if(m==='in'){
       document.getElementById('au-signin').onclick = () => {
         const email = document.getElementById('au-email').value.trim();
+        const acc = AUTH.byEmail(email);
+        if(!acc){
+          setMsg('No account found for this email on this device. Accounts are stored on the device itself — tap "Create account" to set one up here.', false);
+          return;
+        }
         if(!AUTH.verify(email, document.getElementById('au-pass').value)){
-          setMsg('Wrong email or password.', false); return;
+          setMsg('Wrong password for this account. Try again, or use "Forgot password?" below.', false); return;
         }
         AUTH.signIn(email);
         bootedEnterApp();
@@ -380,9 +385,14 @@ function bootedEnterApp(){
     // profile switched at the auth gate — load that profile's database
     db = DB.load();
     if(!db){
-      const a = AUTH.byEmail(s);
-      db = emptyDb(a ? a.name : 'Boss');
-      DB.save();
+      if(s === 'guest'){
+        // guest workspace is the seeded demo — create it if this device has never used it
+        DB.seed();
+      } else {
+        const a = AUTH.byEmail(s);
+        db = emptyDb(a ? a.name : 'Boss');
+        DB.save();
+      }
     }
   }
   window.__AF_SESSION = s;
