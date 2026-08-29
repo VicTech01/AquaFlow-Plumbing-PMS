@@ -12,6 +12,7 @@ const NAV = [
   ['inventory','Inventory','box'],
   ['maintenance','Maintenance','wrench'],
   ['whatsapp','WhatsApp','wa'],
+  ['sync','Sync & Devices','sync'],
   ['settings','Settings','gear']
 ];
 
@@ -65,6 +66,7 @@ function openMoreSheet(){
       <button class="sheet-item" data-goto="inventory"><span class="ic">${icon('box',17)}</span>Inventory${badge(nLow)}</button>
       <button class="sheet-item" data-goto="maintenance"><span class="ic">${icon('wrench',17)}</span>Maintenance${badge(nDue)}</button>
       <button class="sheet-item" data-goto="whatsapp"><span class="ic">${icon('wa',17)}</span>WhatsApp${badge(nWa)}</button>
+      <button class="sheet-item" data-goto="sync"><span class="ic">${icon('sync',17)}</span>Sync &amp; Devices</button>
       <button class="sheet-item" data-goto="settings"><span class="ic">${icon('gear',17)}</span>Settings</button>
     </div>
     <div class="sheet-note">${jobsToday} job${jobsToday===1?'':'s'} on today's schedule · data stored on this device</div>`);
@@ -116,9 +118,21 @@ function bindTop(){
 function initApp(){
   if(db) return;
   db = DB.load();
+  // desktop: restore from the on-disk database file if browser storage is empty
+  if(!db && window.__AQUAFLOW && window.__AQUAFLOW.loadPersisted && typeof SyncCore !== 'undefined'){
+    try {
+      const p = window.__AQUAFLOW.loadPersisted();
+      if(p && SyncCore.isValidDb(JSON.parse(p))){ db = JSON.parse(p); DB.save(); }
+    } catch(e){}
+  }
   if(!db){
     db = DB.seed();
     toast('Loaded demo data — reset anytime in Settings');
+  }
+  initChangeTracking();
+  // desktop: live-merge pushes arriving from the phone
+  if(window.__AQUAFLOW && window.__AQUAFLOW.onDbChanged){
+    window.__AQUAFLOW.onDbChanged(j => DB.adoptIncoming(j, {toastNote:'Synced new changes from another device'}));
   }
   buildNav();
   buildTabbar();

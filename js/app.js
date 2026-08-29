@@ -16,9 +16,42 @@ const DB = {
     try{ localStorage.setItem(this.key, JSON.stringify(db)); }
     catch(e){ if(db) db.memoryMode = true; }
   },
-  seed(){ const d = makeSeed(); db = d; this.save(); return d; }
+  seed(){ const d = makeSeed(); db = d; this.save(); return d; },
+  adoptIncoming(dbJson, {toastNote}={}){
+    // remote push arrived (phone → desktop): merge into local state
+    if(typeof SyncCore === 'undefined') return false;
+    const remote = JSON.parse(dbJson);
+    if(!SyncCore.isValidDb(remote)) return false;
+    const merged = SyncCore.mergeDbs(db, remote, {direction:'pull'});
+    db = merged;
+    DB.save();
+    prevDbJson = JSON.stringify(db);
+    if(typeof reRender === 'function' && ui.view) reRender();
+    if(toastNote) toast(toastNote);
+    return true;
+  }
 };
-function commit(){ DB.save(); }
+function commit(){
+  stampAndNotify();
+  DB.save();
+}
+
+/* ---- offline-first change tracking (feeds sync merge) ---- */
+let prevDbJson = null;
+function initChangeTracking(){
+  prevDbJson = db ? JSON.stringify(db) : null;
+}
+function stampAndNotify(){
+  if(!db) return;
+  if(!prevDbJson){ prevDbJson = JSON.stringify(db); return; }
+  if(typeof SyncCore !== 'undefined') SyncCore.stampChanges(db, prevDbJson);
+  db.meta = db.meta || {};
+  db.meta.lastChangedAt = new Date().toISOString();
+  prevDbJson = JSON.stringify(db);
+  if(window.__AQUAFLOW && window.__AQUAFLOW.sendDb) {
+    try { window.__AQUAFLOW.sendDb(JSON.stringify(db)); } catch(e){}
+  }
+}
 
 /* ================= lookups ================= */
 const customerById = id => db.customers.find(c=>c.id===id);
@@ -179,6 +212,8 @@ const ICONS = {
   chevR:'<path d="M10 6l6 6-6 6"/>',
   userPlus:'<circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.2 3.4-5 6.5-5s5.7 1.8 6.5 5"/><path d="M19 6v6M16 9h6"/>',
   send:'<path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/>',
+  sync:'<path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2" transform="translate(0,0)"/><path d="M21 3v6h-6M3 21v-6h6"/>',
+  wifi:'<path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0"/><path d="M12 19h.01"/>',
   wa:'<path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2m0 1.8a8.2 8.2 0 1 1-4.2 15.3l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 0 1 12 3.8M9 8.2c-.2 0-.4.1-.6.2-.2.1-.5.2-.7.4-.2.2-.9.9-.9 2.1 0 1.3.9 2.5 1 2.7.1.2 1.8 3 4.5 4 2.2.8 2.7.7 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2l-.4-.2-1.5-.7c-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.1-.2 0-.4.1-.5l.5-.6c.1-.2.2-.3.1-.5l-.7-1.7c-.2-.4-.3-.4-.5-.4z"/>'
 };
 function icon(n, size=18){

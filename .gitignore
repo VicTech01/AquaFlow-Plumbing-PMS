@@ -13,4 +13,8 @@ Thumbs.db
 
 # logs
 *.log
-node_modules/
+# desktop build output (installer — delivered via workspace download)
+dist/
+
+# test artifacts
+.test-lan-state.json

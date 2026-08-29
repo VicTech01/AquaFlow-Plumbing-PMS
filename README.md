@@ -1,12 +1,49 @@
 # AquaFlow PMS — Plumbing Contractor Management (Business OS)
 
-A complete, self-contained web app for running a plumbing contracting business — built as a
-genuine **VicTech Plumbing operating system**: income tracking, expenses & net profit,
-a full sales pipeline from lead to paid, and job-level material consumption.
-Built for the Kenyan market (KES, M-Pesa payments, WhatsApp-first notifications, Nairobi areas).
-No build step, no external CDNs — pure HTML/CSS/JS with localStorage persistence.
+A complete, **offline-first** plumbing business OS — genuine VicTech Plumbing operating system:
+income tracking, expenses & net profit, a full sales pipeline from lead to paid,
+job-level material consumption, and **multi-device sync that never touches the cloud**.
 
-## Run it
+Built for the Kenyan market (KES, M-Pesa payments, WhatsApp-first notifications, Nairobi areas).
+No external CDNs, no build step, no backend.
+
+## How the offline architecture works
+
+```
+            ┌─────────────────┐
+            │   AquaFlow PMS  │
+            │   Database      │   (local on every device — works with no internet)
+            └────────┬────────┘
+                     │  sync = merge (per-record, newest edit wins, deletions tracked)
+        ┌────────────┴────────────┐
+        │                         │
+  Windows .EXE                  Phone
+  (desktop app + LAN            (PWA installed from the PC's
+   sync server on port 8484)     Wi-Fi address, cached for offline)
+```
+
+- **Every device owns a complete local database** — record payments on the PC with no internet,
+  schedule jobs from the phone at a customer's house with no signal. Data never leaves the device
+  until you sync.
+- **Wi-Fi sync (primary):** the desktop app runs a built-in server (`Sync & Devices` page →
+  "Share this PC on your Wi-Fi"). Phones on the same network open that address, install the
+  app to the home screen, and hit **Sync** — a merge that unions both sides, lets the newest
+  edit of each record win, tracks deletions, and never resets reference numbers.
+- **Offline transfer (fallback):** export a single `.json` sync file, move it over WhatsApp /
+  USB / SD card, import on the other device. Importing merges — it never wipes.
+- **The Vercel website is only a mirror** for convenience — it is not where your data lives.
+- Desktop database file: `%APPDATA%/aquaflow-pms/db.json` (shown on the Sync page → "Show data file").
+
+### Building the Windows app
+
+```bash
+npm install
+npm run build:win        # → dist/AquaFlow PMS Setup x.y.z.exe (NSIS installer)
+```
+
+(On Windows this works natively. Cross-building from Linux needs wine for the uninstaller step.)
+
+## Run the web version
 
 ```bash
 cd plumbpro
@@ -32,6 +69,7 @@ Or open `index.html` directly in a browser (data persists via localStorage).
 | **Inventory** | Stock levels, reorder alerts, cost vs retail value, movement history (received / **used on JOB-x** / damaged / count). Stock auto-deducts when invoices are created from quotes **and** when you "Record materials used" on a job (which also bills the line to the linked invoice if one exists) |
 | **Maintenance Reminders** | Recurring plans per customer & equipment, due-date engine, "schedule job" prefill, WhatsApp reminder, mark-done rolls the date forward |
 | **WhatsApp Notifications** | Outbox of every composed message (dispatch, quote sent, invoice, payment received, reminder, maintenance). Pre-filled `wa.me` chats — no Business API needed. Copy / mark-sent / clear. All templates editable in Settings |
+| **Sync & Devices** | Offline-first multi-device sync: Wi-Fi sync with any other AquaFlow device (pull / full-pull / full-push / merge), the desktop's built-in LAN sharing server (phones install from it), offline file export/import (merge, never wipe), per-device record counts, last-change/last-sync status |
 | **Settings** | Business profile (**owner name** — powers the dashboard greeting), labor rates, travel fees, VAT, ref prefixes, WhatsApp templates, JSON export/import backup, demo-data reset |
 
 ### The full pipeline
@@ -64,16 +102,25 @@ Lead → Quotation → Scheduled → In Progress → Completed → Invoiced → 
 - **`smoke2.js`** — 11 interactive UI tests simulating real clicks through every save flow.
 - **`smoke3.js`** — 8 tests for round-3 features (solar scopes, type filter, mobile sheets, tab bar).
 - **`smoke4.js`** — 15 business-OS tests: P&L math, pipeline stages + next actions, lead→customer/quote/job flows, expense totals, materials stock deduction + auto-billing, breakdown consistency, customer revenue history.
-- Run all: `node smoke.js && node smoke2.js && node smoke3.js && node smoke4.js` (48 tests)
+- **`smoke5.js`** — 19 sync/offline tests: merge engine (union, last-write-wins, tombstones, counters), live LAN server (health, sync round-trip, static + PWA serving, state persistence), in-app stamping.
+- Run all: `node smoke.js && node smoke2.js && node smoke3.js && node smoke4.js && node smoke5.js` (67 tests)
 
 ## Structure
 
 ```
-index.html            single-page shell
+index.html            single-page shell (+ PWA manifest link, SW registration)
+manifest.json         PWA manifest (phone "Add to Home screen")
+sw.js                 service worker — offline app shell for the phone
+icons/                app icons (192/512)
 css/styles.css        design system
 js/utils.js           date / money / DOM helpers
 js/seed.js            demo data + AI pricing catalog
-js/app.js             state, storage, modals, charts, WA helpers, line-item editor, pipeline engine
-js/views/*.js         one file per module
-js/main.js            bootstrap + navigation
+js/sync.js            sync core: merge engine (UMD — browser + Node)
+js/app.js             state, storage, modals, charts, WA helpers, line-item editor, pipeline engine, change-stamping
+js/lan-server.cjs     LAN sync server (pure Node — used by the desktop app, tested directly)
+js/views/*.js         one file per module (incl. sync.js = Sync & Devices)
+js/main.js            bootstrap + navigation + desktop bridge
+electron/main.cjs     Electron main process (window, IPC, LAN server lifecycle, db.json backup)
+electron/preload.cjs  context-isolated bridge to the app
+package.json          app + electron-builder config (npm run build:win)
 ```
