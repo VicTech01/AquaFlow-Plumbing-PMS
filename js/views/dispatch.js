@@ -17,7 +17,7 @@ VIEWS.dispatch = {
       const pct = clamp(load/cap*100, 0, 100);
       const conflicts = todays.filter(j => jobConflicts(j).some(o => (o.technicianIds||[]).includes(tech.id)));
       return `
-      <div class="card" style="padding:14px">
+      <div class="card pad-sm">
         <div class="row">
           <div class="avatar">${initials(tech.name)}</div>
           <div style="min-width:0">
@@ -78,14 +78,14 @@ VIEWS.dispatch = {
     <div class="stack">
       <div class="card">
         <h3>${icon('clock',15)} Ready to dispatch <span class="chip c-indigo">${pending.length}</span></h3>
-        <div class="tbl-wrap"><table class="tbl">
+        <div class="tbl-wrap"><table class="tbl stick">
           <thead><tr><th>When</th><th>Job</th><th>Assign crew</th><th></th></tr></thead>
           <tbody>${pendingRows}</tbody>
         </table></div>
       </div>
       <div class="card">
         <h3>${icon('send',15)} On the move <span class="chip c-sky">${active.length}</span></h3>
-        <div class="tbl-wrap"><table class="tbl">
+        <div class="tbl-wrap"><table class="tbl stick">
           <thead><tr><th>When</th><th>Job</th><th>Crew</th><th>Actions</th></tr></thead>
           <tbody>${activeRows}</tbody>
         </table></div>

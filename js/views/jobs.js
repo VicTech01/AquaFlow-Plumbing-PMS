@@ -92,7 +92,7 @@ function jobsCalMount(){
 function jobsListHTML(){
   return `
   <div class="card">
-    <div class="row mb12" style="flex-wrap:wrap">
+    <div class="filter-bar">
       <input class="inp search-inp" id="jl-q" placeholder="Search title, customer, ref…">
       <select class="inp" id="jl-status" style="max-width:150px">
         <option value="">All statuses</option>
@@ -109,7 +109,7 @@ function jobsListHTML(){
       <input type="date" class="inp" id="jl-from" style="max-width:160px" title="From date">
       <input type="date" class="inp" id="jl-to" style="max-width:160px" title="To date">
     </div>
-    <div class="tbl-wrap"><table class="tbl">
+    <div class="tbl-wrap"><table class="tbl stick">
       <thead><tr><th>Ref</th><th>When</th><th>Job</th><th>Customer</th><th>Technician(s)</th><th class="num">Hrs</th><th>Status</th><th>Priority</th><th></th></tr></thead>
       <tbody id="jl-body">${jobsListRows(db.jobs.slice().sort((a,b)=>(b.date+b.start).localeCompare(a.date+a.start)))}</tbody>
     </table></div>
@@ -188,7 +188,7 @@ function jobsPipelineHTML(){
       <span class="muted small">Lead → Quotation → Scheduled → In Progress → Completed → Invoiced → Paid</span>
       <span class="muted small" style="margin-left:auto">${active.length} in flight · ${closed.length} paid off</span>
     </div>
-    <div class="tbl-wrap"><table class="tbl">
+    <div class="tbl-wrap"><table class="tbl stick">
       <thead><tr><th>Job</th><th class="resp-sm">Customer</th><th class="resp-md">Pipeline</th><th class="num resp-sm">Hrs</th><th>Next action</th></tr></thead>
       <tbody>
         ${active.length ? active.map(row).join('') : '<tr><td colspan="5" class="empty">Nothing in flight 🎉</td></tr>'}
@@ -341,7 +341,7 @@ function materialsModal(job){
   const inv = jobInvoice(job);
   openModal(`Materials used — ${job.ref}`, `
     <p class="muted small">Select what was consumed on this job. Stock is deducted immediately and logged to item history${inv?`, and each line is added to <b>${inv.ref}</b> so the customer is billed`:' (no invoice yet — stock deducted, invoice the job to bill it)'}. Low-stock alerts apply.</p>
-    <div class="tbl-wrap"><table class="tbl">
+    <div class="tbl-wrap"><table class="tbl stick">
       <thead><tr><th>Item (from inventory)</th><th class="num">Qty</th><th class="num">Unit price</th><th></th></tr></thead>
       <tbody id="mm-body">${matRowHTML()}</tbody>
     </table></div>
@@ -481,14 +481,14 @@ function openJobModal(id){
     ${conflicts.length ? `<div class="badge-warn">${icon('alert',15)} Overlap: technician double-booked with ${conflicts.map(o=>o.ref).join(', ')}. Reassign or reschedule in Dispatch.</div>` : ''}
     <div class="card pipe-card">${stepperHTML(j)}</div>
     <div class="grid2" style="grid-template-columns:1fr 1fr">
-      <div class="card" style="background:#f8fafc">
+      <div class="card soft">
         <h3>Customer</h3>
         <b>${esc(c?c.name:'—')}</b>
         <div class="muted small mt8">${icon('phone',13)} ${esc(c?c.phone:'—')}</div>
         <div class="muted small mt8">${icon('pin',13)} ${esc(j.address || (c?c.address:'—'))}</div>
         ${c && c.phone ? `<a class="btn wa sm mt12" target="_blank" rel="noopener" href="${waLink(c.phone, waTemplateMsg('job_confirm', {customer:c.name.split(' ')[0], job:j.title, type:j.type, date:fmtDateShort(j.date), time:j.start, tech: techs.length?techs[0].name:'our team', business:b.name}))}">${icon('wa',14)} Confirm on WhatsApp</a>` : ''}
       </div>
-      <div class="card" style="background:#f8fafc">
+      <div class="card soft">
         <h3>Technicians</h3>
         ${techs.length ? techs.map(t=>`
           <div class="spread" style="padding:4px 0">
@@ -506,7 +506,7 @@ function openJobModal(id){
     ${j.notes ? `<div class="badge-info">${icon('doc',14)} ${esc(j.notes)}</div>` : ''}
     ${jobIncomeCardHTML(j)}
     <div class="grid2 mt12">
-      <div class="card" style="background:#f8fafc">
+      <div class="card soft">
         <h3>${icon('clock',15)} Activity timeline</h3>
         ${timelineHTML(j)}
         <div class="row mt8">
@@ -514,7 +514,7 @@ function openJobModal(id){
           <button class="btn ghost sm" id="jt-add">${icon('plus',14)} Add</button>
         </div>
       </div>
-      <div class="card" style="background:#f8fafc">
+      <div class="card soft">
         <h3>${icon('camera',15)} Job photos</h3>
         <p class="muted small">Before / progress / after — kept on the job as documentation of the work.</p>
         <div class="row mb8">

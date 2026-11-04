@@ -109,7 +109,7 @@ VIEWS.cust_quotes = {
     return `
     ${custGate()}
     <div class="card">
-      <div class="tbl-wrap"><table class="tbl">
+      <div class="tbl-wrap"><table class="tbl stick">
         <thead><tr><th>Ref</th><th>Quotation</th><th class="resp-sm">Date</th><th class="num">Total</th><th>Status</th><th></th></tr></thead>
         <tbody>
           ${qs.length ? qs.map(q => `<tr class="click" data-cq="${q.id}">
@@ -136,7 +136,7 @@ VIEWS.cust_invoices = {
     return `
     ${custGate()}
     <div class="card">
-      <div class="tbl-wrap"><table class="tbl">
+      <div class="tbl-wrap"><table class="tbl stick">
         <thead><tr><th>Ref</th><th>Issued</th><th class="num">Total</th><th class="num">Paid</th><th class="num">Balance</th><th>Status</th><th></th></tr></thead>
         <tbody>
           ${invs.length ? invs.map(i => {
@@ -183,7 +183,7 @@ VIEWS.cust_invoice = {
     </div>
     <div class="card">
       <h3>${icon('doc',15)} Line items</h3>
-      <div class="tbl-wrap"><table class="tbl">
+      <div class="tbl-wrap"><table class="tbl stick">
         <thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Amount</th></tr></thead>
         <tbody>
           ${inv.items.map(i=>`<tr><td>${i.kind==='Material'?'🔩':i.kind==='Transport'?'🚚':'🛠'} ${esc(i.desc)}</td><td class="num">${i.qty}</td><td class="num">${money(i.qty*i.price)}</td></tr>`).join('')}
@@ -199,7 +199,7 @@ VIEWS.cust_invoice = {
     ${(inv.payments||[]).length ? `<div class="card mt12">
       <h3>${icon('cash',15)} Your payments</h3>
       ${(inv.payments||[]).slice().reverse().map(p=>`
-        <div class="spread" style="padding:6px 0;border-bottom:1px dashed #eef2f7">
+        <div class="spread" style="padding:6px 0;border-bottom:1px dashed var(--border-soft)">
           <span>${fmtDate(p.date)} · ${esc(p.method)}${p.note?` <span class="muted small">(${esc(p.note)})</span>`:''}</span>
           <b class="ok">${money(p.amount)}</b>
         </div>`).join('')}
@@ -224,7 +224,7 @@ VIEWS.cust_jobs = {
     return `
     ${custGate()}
     <div class="card">
-      <div class="tbl-wrap"><table class="tbl">
+      <div class="tbl-wrap"><table class="tbl stick">
         <thead><tr><th>Ref</th><th>Job</th><th class="resp-md">When</th><th class="resp-md">Where</th><th>Status</th></tr></thead>
         <tbody>
           ${jobs.length ? jobs.map(j => `<tr>
@@ -259,7 +259,7 @@ VIEWS.cust_help = {
         ${b.email ? `<a class="btn ghost" href="mailto:${esc(b.email)}">${icon('mail',14)} Send email</a>` : ''}
       </div>
     </div>
-    <div class="card mt12" style="background:#f8fafc">
+    <div class="card mt12 soft">
       <h3>${icon('doc',15)} About your portal</h3>
       <p class="muted small" style="margin:0">This portal shows <b>only your records</b> — your quotations, invoices, jobs and payments with ${esc(b.name)}. Nothing here can be edited; contact us for changes. All data stays between you and the business.</p>
     </div>

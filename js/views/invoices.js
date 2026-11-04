@@ -46,11 +46,11 @@ VIEWS.invoices = {
 
     return `
     <div class="page-head">
-      <div class="kpis" style="margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;width:100%">
-        <div class="kpi"><div class="lab">Outstanding</div><div class="val" style="font-size:18px">${money(outstanding)}</div></div>
-        <div class="kpi"><div class="lab">Overdue</div><div class="val" style="font-size:18px;color:var(--red)">${money(overdue)}</div></div>
-        <div class="kpi"><div class="lab">Collected (30d)</div><div class="val" style="font-size:18px;color:var(--green)">${money(collected30)}</div></div>
-        <div class="kpi"><div class="lab">Invoices</div><div class="val" style="font-size:18px">${db.invoices.length}</div></div>
+      <div class="kpis inline">
+        <div class="kpi mini"><div class="lab">Outstanding</div><div class="val">${money(outstanding)}</div></div>
+        <div class="kpi mini"><div class="lab">Overdue</div><div class="val bad">${money(overdue)}</div></div>
+        <div class="kpi mini"><div class="lab">Collected (30d)</div><div class="val ok">${money(collected30)}</div></div>
+        <div class="kpi mini"><div class="lab">Invoices</div><div class="val">${db.invoices.length}</div></div>
       </div>
       <button class="btn primary" id="inv-new">${icon('plus',15)} New invoice</button>
     </div>
@@ -64,7 +64,7 @@ VIEWS.invoices = {
       </div>
     </div>
     <div class="card">
-      <div class="tbl-wrap"><table class="tbl">
+      <div class="tbl-wrap"><table class="tbl stick">
         <thead><tr><th>Ref</th><th>Customer</th><th class="resp-md">Issued</th><th>Due</th><th class="num">Total</th><th class="num resp-sm">Paid</th><th class="num">Balance</th><th>Status</th><th></th></tr></thead>
         <tbody>${rows || '<tr><td colspan="9" class="empty">No invoices yet</td></tr>'}</tbody>
       </table></div>
@@ -142,7 +142,7 @@ VIEWS.invoice = {
     <div class="grid2">
       <div class="card">
         <h3>${icon('doc',15)} Line items</h3>
-        <div class="tbl-wrap"><table class="tbl">
+        <div class="tbl-wrap"><table class="tbl stick">
           <thead><tr><th>Description</th><th>Qty</th><th class="num">Unit</th><th class="num">Amount</th></tr></thead>
           <tbody>
             ${inv.items.map(i=>`<tr><td>${i.kind==='Material'?'🔩':i.kind==='Transport'?'🚚':'🛠'} ${esc(i.desc)}</td><td class="num">${i.qty}</td><td class="num">${money(i.price)} ${esc(i.unit||'')}</td><td class="num">${money(i.qty*i.price)}</td></tr>`).join('')}
@@ -159,7 +159,7 @@ VIEWS.invoice = {
       <div class="stack">
         <div class="card">
           <h3>${icon('cash',15)} Payments (${(inv.payments||[]).length})</h3>
-          ${inv.payments && inv.payments.length ? `<div class="tbl-wrap"><table class="tbl">
+          ${inv.payments && inv.payments.length ? `<div class="tbl-wrap"><table class="tbl stick">
             <thead><tr><th>Date</th><th>Method</th><th class="num">Amount</th></tr></thead>
             <tbody>${inv.payments.slice().reverse().map(p=>`
               <tr><td>${fmtDate(p.date)}<div class="subrow">${esc(p.note||'')}</div></td><td>${esc(p.method)}</td><td class="num">${money(p.amount)}</td></tr>`).join('')}
@@ -170,7 +170,7 @@ VIEWS.invoice = {
           <h3>${icon('cash',15)} Income breakdown</h3>
           ${breakdownHTML(inv.items)}
         </div>
-        ${job ? `<div class="card" style="background:#f8fafc">
+        ${job ? `<div class="card soft">
           <h3>${icon('calendar',15)} Linked job</h3>
           <b class="small">${job.ref} — ${esc(job.title)}</b>
           <div class="row mt8">${chip(job.status)}<span class="muted small">${fmtDateShort(job.date)} ${job.start}</span></div>
@@ -268,7 +268,7 @@ VIEWS.invoice_new = {
         </div>
       </div>
       <div class="stack">
-        <div class="card" style="background:#f8fafc">
+        <div class="card soft">
           <h3>${icon('doc',15)} Tip</h3>
           <p class="muted small" style="margin:0">Linking a job pre-fills labor from its duration and the assigned technician's rate. If the job has an approved/sent quotation, all its line items are copied over. Materials that exist in inventory are deducted from stock on save.</p>
         </div>

@@ -37,7 +37,7 @@ VIEWS.expenses = {
       </div>
       <div class="card">
         <h3>${icon('receipt',15)} All expenses</h3>
-        <div class="tbl-wrap"><table class="tbl">
+        <div class="tbl-wrap"><table class="tbl stick">
           <thead><tr><th>Date</th><th>Category</th><th>Description</th><th class="num">Amount</th><th></th></tr></thead>
           <tbody>
             ${all.length ? all.map(e => `

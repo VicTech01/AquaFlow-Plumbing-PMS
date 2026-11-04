@@ -87,8 +87,8 @@ VIEWS.reports = {
       <div class="card">
         <h3>${icon('users',15)} Customers in period</h3>
         <div class="row" style="gap:28px">
-          <div><div class="bold" style="font-size:24px">${s.newC}</div><div class="muted small">New customers (first job in period)</div></div>
-          <div><div class="bold" style="font-size:24px">${s.retC}</div><div class="muted small">Returning customers</div></div>
+          <div><div class="bold t-2xl tnum">${s.newC}</div><div class="muted small">New customers (first job in period)</div></div>
+          <div><div class="bold t-2xl tnum">${s.retC}</div><div class="muted small">Returning customers</div></div>
         </div>
         <h3 class="mt16">${icon('receipt',15)} Top outstanding (all time)</h3>
         ${s.topDebtors.length ? s.topDebtors.map(d => `<div class="r small" style="padding:4px 0"><span>${esc(d.c.name)}</span><b>${money(d.v)}</b></div>`).join('') : '<div class="muted small">No outstanding invoices 🎉</div>'}

@@ -1,14 +1,16 @@
 {
   "name": "aquaflow-pms",
   "productName": "AquaFlow PMS",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "description": "Offline-first plumbing business OS — desktop (Windows) + phone sync over LAN",
   "author": "VicTech Plumbing <victor@victech.co.ke>",
   "main": "electron/main.cjs",
   "scripts": {
     "start": "electron .",
     "build:win": "electron-builder --win",
-    "test": "node smoke.js && node smoke2.js && node smoke3.js && node smoke4.js && node smoke5.js"
+    "test": "node smoke.js && node smoke2.js && node smoke3.js && node smoke4.js && node smoke5.js",
+    "preview": "node dev-preview.cjs",
+    "test:all": "node smoke.js && node smoke2.js && node smoke3.js && node smoke4.js && node smoke5.js && node smoke6.js && node smoke7.js && node smoke8.js && node smoke9.js && node smoke10.js"
   },
   "devDependencies": {
     "electron": "^33.2.0",

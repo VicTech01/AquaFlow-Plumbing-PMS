@@ -11,7 +11,7 @@ VIEWS.maintenance = {
     const dueSoon = plans.filter(p => dayDiff(t, p.next) <= 14);
     return `
     <div class="page-head">
-      <div class="small muted">Recurring service plans per customer &amp; equipment — we remind you (and the customer on WhatsApp) as the due date approaches.</div>
+      <div class="page-sub" style="max-width:62ch">Recurring service plans per customer &amp; equipment — we remind you (and the customer on WhatsApp) as the due date approaches.</div>
       <button class="btn primary" id="mt-new">${icon('plus',15)} New plan</button>
     </div>
     <div class="card mb16">
@@ -19,7 +19,7 @@ VIEWS.maintenance = {
       ${dueSoon.length ? dueSoon.map(m => {
         const c = customerById(m.customerId);
         const n = dayDiff(t, m.next);
-        return `<div class="spread mb8" style="padding:10px 0;border-bottom:1px dashed #eef2f7;flex-wrap:wrap">
+        return `<div class="spread mb8" style="padding:10px 0;border-bottom:1px dashed var(--border-soft);flex-wrap:wrap">
           <div>
             <b>${esc(m.equipment)}</b> — ${esc(c?c.name:'—')}
             <div class="subrow">every ${m.frequencyMonths} mo · last serviced ${fmtDate(m.lastDone)} (${relDays(m.lastDone)})${m.notes?' · '+esc(m.notes):''}</div>
@@ -35,7 +35,7 @@ VIEWS.maintenance = {
     </div>
     <div class="card">
       <h3>${icon('wrench',15)} All plans (${plans.length})</h3>
-      <div class="tbl-wrap"><table class="tbl">
+      <div class="tbl-wrap"><table class="tbl stick">
         <thead><tr><th>Customer</th><th>Equipment</th><th class="resp-sm">Frequency</th><th class="resp-md">Last serviced</th><th>Next due</th><th>Status</th><th></th></tr></thead>
         <tbody>
           ${plans.length ? plans.map(m => {

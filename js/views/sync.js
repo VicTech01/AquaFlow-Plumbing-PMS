@@ -20,8 +20,8 @@ VIEWS.sync = {
 
     return `
     <div class="kpis">
-      <div class="kpi"><div class="ic blue">${icon('clock',17)}</div><div class="lab">Last change</div><div class="val small" style="font-size:13px;padding-top:4px">${lastChanged}</div></div>
-      <div class="kpi"><div class="ic green">${icon('sync',17)}</div><div class="lab">Last sync</div><div class="val small" style="font-size:13px;padding-top:4px">${lastSync}</div></div>
+      <div class="kpi"><div class="ic blue">${icon('clock',17)}</div><div class="lab">Last change</div><div class="val val-text">${lastChanged}</div></div>
+      <div class="kpi"><div class="ic green">${icon('sync',17)}</div><div class="lab">Last sync</div><div class="val val-text">${lastSync}</div></div>
       <div class="kpi"><div class="ic amber">${icon('box',17)}</div><div class="lab">Records on this device</div><div class="val">${total}</div><div class="sub">stored locally — works offline</div></div>
     </div>
 
@@ -216,7 +216,7 @@ VIEWS.sync = {
         const showFile = $('#sy-show-file');
         if(info){
           urlEl.style.display = '';
-          urlEl.innerHTML = `<b style="font-size:15px;letter-spacing:.02em">${info.url}</b>`;
+          urlEl.innerHTML = `<b class="t-md">${info.url}</b>`;
           showFile.style.display = '';
           btn.textContent = '⏻ Turn off';
           btn.classList.remove('primary'); btn.classList.add('danger');

@@ -23,7 +23,7 @@ VIEWS.quotes = {
       </div>
     </div>
     <div class="card">
-      <div class="tbl-wrap"><table class="tbl">
+      <div class="tbl-wrap"><table class="tbl stick">
         <thead><tr><th>Ref</th><th>Customer</th><th>Title</th><th class="resp-sm">Created</th><th class="resp-md">Valid until</th><th class="num">Total</th><th>Status</th><th></th></tr></thead>
         <tbody>
           ${list.length ? list.map(q => {
@@ -244,7 +244,7 @@ VIEWS.quote_edit = {
           </div>
           <ul class="assume">${res.assumptions.map(a=>`<li>${esc(a)}</li>`).join('')}</ul>
           <div class="spread">
-            <div><span class="muted small">Est. total incl. VAT</span><div class="bold" style="font-size:17px">${money(res.total)}</div></div>
+            <div><span class="muted small">Est. total incl. VAT</span><div class="bold t-lg tnum">${money(res.total)}</div></div>
             <button class="btn primary sm" id="ai-apply">${icon('check',14)} Apply to quotation</button>
           </div>
         </div>`;
