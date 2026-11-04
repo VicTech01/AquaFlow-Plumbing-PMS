@@ -28,7 +28,7 @@ VIEWS.customers = {
       <button class="btn primary" id="cu-new">${icon('userPlus',15)} Add customer</button>
     </div>
     <div class="card">
-      <div class="tbl-wrap"><table class="tbl">
+      <div class="tbl-wrap"><table class="tbl stick">
         <thead><tr><th>Customer</th><th class="resp-md">Type</th><th class="resp-md">Area</th><th>Phone</th><th class="num resp-md">Jobs</th><th class="num resp-sm">Lifetime paid</th><th class="num">Outstanding</th><th class="resp-sm">Last job</th><th></th></tr></thead>
         <tbody>
           ${rows.length ? rows.map(({c,jobs,outstanding,spent,last}) => `
@@ -108,7 +108,7 @@ VIEWS.customer = {
     <div class="card mb16">
       <div class="spread">
         <div class="row">
-          <div class="avatar" style="width:46px;height:46px;font-size:16px">${initials(c.name)}</div>
+          <div class="avatar lg">${initials(c.name)}</div>
           <div>
             <h2 class="page" style="margin:0">${esc(c.name)}</h2>
             <div class="row mt8 small" style="flex-wrap:wrap">
@@ -128,12 +128,12 @@ VIEWS.customer = {
           <button class="btn ghost sm" id="cu-quote">${icon('spark',14)} New quote</button>
         </div>
       </div>
-      <div class="row mt16" style="gap:26px;flex-wrap:wrap;font-size:13px">
-        <div><span class="muted small">Total jobs</span><div class="bold" style="font-size:17px">${jobs.length}</div></div>
-        <div><span class="muted small">Total revenue</span><div class="bold" style="font-size:17px">${money(sum(invoices, invTotal))}</div></div>
-        <div><span class="muted small">Lifetime paid</span><div class="bold" style="font-size:17px">${money(spent)}</div></div>
-        <div><span class="muted small">Outstanding</span><div class="bold" style="font-size:17px;color:${outstanding>0?'var(--red)':'var(--green)'}">${money(outstanding)}</div></div>
-        ${jobs.length ? `<div><span class="muted small">Last job</span><div class="bold" style="font-size:13px;line-height:1.4">${esc(jobs[0].title)}<br><span class="muted small" style="font-weight:400">${fmtDateShort(jobs[0].date)}</span></div></div>` : ''}
+      <div class="stat-row mt16">
+        <div class="stat static"><span class="ic blue">${icon('calendar',16)}</span><span class="stat-b"><span class="stat-l">Total jobs</span><span class="stat-v">${jobs.length}</span></span></div>
+        <div class="stat static"><span class="ic violet">${icon('receipt',16)}</span><span class="stat-b"><span class="stat-l">Total revenue</span><span class="stat-v">${money(sum(invoices, invTotal))}</span></span></div>
+        <div class="stat static"><span class="ic green">${icon('cash',16)}</span><span class="stat-b"><span class="stat-l">Lifetime paid</span><span class="stat-v">${money(spent)}</span></span></div>
+        <div class="stat static"><span class="ic ${outstanding>0?'red':'green'}">${icon('wallet',16)}</span><span class="stat-b"><span class="stat-l">Outstanding</span><span class="stat-v ${outstanding>0?'bad':'ok'}">${money(outstanding)}</span></span></div>
+        ${jobs.length ? `<div class="stat static text"><span class="ic gray">${icon('wrench',16)}</span><span class="stat-b"><span class="stat-l">Last job</span><span class="stat-v">${esc(jobs[0].title)}</span><span class="stat-s">${fmtDateShort(jobs[0].date)}</span></span></div>` : ''}
       </div>
     </div>
 
@@ -141,7 +141,7 @@ VIEWS.customer = {
       <div class="stack">
         <div class="card">
           <h3>${icon('calendar',15)} Jobs</h3>
-          <div class="tbl-wrap"><table class="tbl"><tbody>
+          <div class="tbl-wrap"><table class="tbl stick"><tbody>
             ${jobs.length ? jobs.slice(0,8).map(j=>`
               <tr class="click" data-job="${j.id}">
                 <td style="width:110px"><b>${fmtDateShort(j.date)}</b><div class="subrow">${j.start}</div></td>
@@ -154,7 +154,7 @@ VIEWS.customer = {
           <h3>${icon('wrench',15)} Maintenance plans</h3>
           ${maints.length ? maints.map(m=>{
             const next = nextDueDate(m); const n = dayDiff(isoDate(today()), next);
-            return `<div class="spread" style="padding:6px 0;border-bottom:1px dashed #eef2f7">
+            return `<div class="spread" style="padding:6px 0;border-bottom:1px dashed var(--border-soft)">
               <div><b class="small">${esc(m.equipment)}</b><div class="subrow">every ${m.frequencyMonths} mo · last ${fmtDate(m.lastDone)}</div></div>
               ${chip(n<0?`Overdue ${-n}d`: n===0?'Due today':`In ${n}d`, n<0?'red':n<=14?'amber':'green')}
             </div>`;
@@ -164,7 +164,7 @@ VIEWS.customer = {
       <div class="stack">
         <div class="card">
           <h3>${icon('doc',15)} Quotations</h3>
-          <div class="tbl-wrap"><table class="tbl"><tbody>
+          <div class="tbl-wrap"><table class="tbl stick"><tbody>
             ${quotes.length ? quotes.map(q=>`
               <tr class="click" data-quote="${q.id}">
                 <td>${esc(q.title)}<div class="subrow">${q.ref}</div></td>
@@ -175,7 +175,7 @@ VIEWS.customer = {
         </div>
         <div class="card">
           <h3>${icon('receipt',15)} Invoices</h3>
-          <div class="tbl-wrap"><table class="tbl"><tbody>
+          <div class="tbl-wrap"><table class="tbl stick"><tbody>
             ${invoices.length ? invoices.map(i=>{
               const st = invState(i);
               return `<tr class="click" data-inv="${i.id}">
@@ -189,7 +189,7 @@ VIEWS.customer = {
         <div class="card">
           <h3>${icon('doc',15)} Notes</h3>
           ${c.notes && c.notes.length ? c.notes.map(n=>`
-            <div style="padding:7px 0;border-bottom:1px dashed #eef2f7;font-size:13px">${esc(n.text)}<div class="subrow">${fmtDate(n.at)}</div></div>`).join('') : '<div class="muted small">No notes yet.</div>'}
+            <div style="padding:7px 0;border-bottom:1px dashed var(--border-soft);font-size:13px">${esc(n.text)}<div class="subrow">${fmtDate(n.at)}</div></div>`).join('') : '<div class="muted small">No notes yet.</div>'}
           <div class="mt12">
             <textarea class="inp" id="cu-note" rows="2" placeholder="e.g. Gate code 4482, dog in yard, meter is behind kitchen…"></textarea>
             <button class="btn ghost sm mt8" id="cu-notego">Add note</button>

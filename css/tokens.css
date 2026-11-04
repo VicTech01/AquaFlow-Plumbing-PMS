@@ -1,0 +1,425 @@
+/* ==========================================================================
+   AquaFlow Design System — 1. TOKENS
+   --------------------------------------------------------------------------
+   Single source of truth for colour, type, space, radius, elevation, motion
+   and layering. Nothing in this file draws a component: styles.css consumes
+   these tokens. Legacy variable names (--ink, --muted, --line, --red …) are
+   kept as aliases at the bottom because inline styles in js/ reference them.
+
+   Theme switching = swapping the semantic layer only. Primitives never change.
+   ========================================================================== */
+
+/* ---------- 1.1 Primitive palette (fixed, theme-independent) ---------- */
+:root{
+  /* Aqua — brand. Water, trust, precision. */
+  --aqua-50:#f0f9ff;  --aqua-100:#e0f2fe; --aqua-200:#bae6fd; --aqua-300:#7dd3fc;
+  --aqua-400:#38bdf8; --aqua-500:#0ea5e9; --aqua-600:#0284c7; --aqua-700:#0369a1;
+  --aqua-800:#075985; --aqua-900:#0c4a6e; --aqua-950:#082f49;
+
+  /* Abyss — deep navy. Surfaces that carry the brand (sidebar, auth, docs). */
+  --abyss-500:#1d4260; --abyss-600:#16324a; --abyss-700:#10263a;
+  --abyss-800:#0b1b2b; --abyss-900:#071320; --abyss-950:#040d17;
+
+  /* Neutral — cool slate, tuned for data-dense UI */
+  --n-0:#ffffff;   --n-25:#fcfdff;  --n-50:#f7f9fc;  --n-75:#f3f6fb;
+  --n-100:#eef2f7; --n-150:#e7edf5; --n-200:#dde5ef; --n-300:#c8d3e1;
+  --n-400:#9fadbf; --n-500:#75859c; --n-600:#55657f; --n-700:#3d4c63;
+  --n-800:#26344a; --n-900:#16233a; --n-950:#0d1829;
+
+  /* Semantic hues */
+  --green-50:#ecfdf5; --green-100:#d1fae5; --green-200:#a7f3d0; --green-500:#10b981;
+  --green-600:#059669; --green-700:#047857; --green-800:#065f46;
+
+  --amber-50:#fffbeb; --amber-100:#fef3c7; --amber-200:#fde68a; --amber-500:#f59e0b;
+  --amber-600:#d97706; --amber-700:#b45309; --amber-800:#92400e;
+
+  --red-50:#fef2f2; --red-100:#fee2e2; --red-200:#fecaca; --red-500:#ef4444;
+  --red-600:#dc2626; --red-700:#b91c1c; --red-800:#991b1b;
+
+  --violet-50:#f5f3ff; --violet-100:#ede9fe; --violet-200:#ddd6fe; --violet-500:#8b5cf6;
+  --violet-600:#7c3aed; --violet-700:#6d28d9; --violet-800:#4c1d95;
+
+  --indigo-50:#eef2ff; --indigo-100:#e0e7ff; --indigo-500:#6366f1;
+  --indigo-600:#4f46e5; --indigo-700:#4338ca; --indigo-800:#312e81;
+
+  --teal-50:#f0fdfa; --teal-100:#ccfbf1; --teal-600:#0d9488; --teal-700:#0f766e; --teal-800:#115e59;
+
+  --orange-500:#f97316; --orange-600:#ea580c;
+  --wa-500:#25d366; --wa-600:#1ebe5b; --wa-ink:#06301c;
+
+  /* ---------- 1.2 Typography ---------- */
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI Variable Text","Segoe UI",
+              Inter,Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,"SF Mono","Cascadia Mono",Menlo,Consolas,
+              "Liberation Mono",monospace;
+
+  /* modular scale — 1.2 ratio, rem-based so the whole UI honours browser zoom */
+  --fs-2xs:.6875rem;   /* 11  micro labels, table eyebrows   */
+  --fs-xs:.75rem;      /* 12  secondary text, chips          */
+  --fs-sm:.8125rem;    /* 13  dense table body, form help    */
+  --fs-base:.875rem;   /* 14  app default body               */
+  --fs-md:.9375rem;    /* 15  emphasised body, card titles   */
+  --fs-lg:1.0625rem;   /* 17  section headings               */
+  --fs-xl:1.25rem;     /* 20  page title                     */
+  --fs-2xl:1.5rem;     /* 24  KPI value                      */
+  --fs-3xl:1.875rem;   /* 30  hero number                    */
+
+  --lh-tight:1.2; --lh-snug:1.35; --lh-normal:1.5; --lh-relaxed:1.65;
+
+  --fw-regular:400; --fw-medium:500; --fw-semibold:600; --fw-bold:700; --fw-extrabold:800;
+
+  --tr-tight:-.015em;   /* big numbers: pull in */
+  --tr-normal:0;
+  --tr-wide:.02em;
+  --tr-caps:.07em;      /* uppercase micro labels */
+
+  /* ---------- 1.3 Space — 4px base grid ---------- */
+  --sp-0:0;      --sp-px:1px;  --sp-05:2px;   --sp-1:4px;    --sp-15:6px;
+  --sp-2:8px;    --sp-25:10px; --sp-3:12px;   --sp-35:14px;  --sp-4:16px;
+  --sp-5:20px;   --sp-6:24px;  --sp-7:28px;   --sp-8:32px;   --sp-10:40px;
+  --sp-12:48px;  --sp-16:64px; --sp-20:80px;
+
+  /* ---------- 1.4 Radius ---------- */
+  --r-xs:6px; --r-sm:8px; --r-md:10px; --r-lg:14px; --r-xl:18px;
+  --r-2xl:24px; --r-full:999px;
+
+  /* ---------- 1.5 Elevation ---------- */
+  --sh-1:0 1px 2px rgba(13,27,42,.06), 0 1px 1px rgba(13,27,42,.04);
+  --sh-2:0 2px 4px rgba(13,27,42,.06), 0 6px 16px -8px rgba(13,27,42,.14);
+  --sh-3:0 8px 24px -6px rgba(13,27,42,.16), 0 24px 48px -24px rgba(13,27,42,.24);
+  --sh-4:0 24px 64px -12px rgba(7,19,32,.34), 0 48px 96px -32px rgba(7,19,32,.28);
+  --sh-inset:inset 0 1px 0 rgba(255,255,255,.6);
+  --sh-accent:0 6px 16px -6px rgba(3,105,161,.55);
+
+  /* ---------- 1.6 Motion ---------- */
+  --dur-1:.12s; --dur-2:.18s; --dur-3:.26s; --dur-4:.4s;
+  --ease-out:cubic-bezier(.2,.8,.25,1);
+  --ease-in-out:cubic-bezier(.4,0,.2,1);
+  --ease-spring:cubic-bezier(.34,1.4,.64,1);
+
+  /* ---------- 1.7 Layering ---------- */
+  --z-sticky:20; --z-nav:40; --z-modal:50; --z-fab:60; --z-scrim:60;
+  --z-sheet:61; --z-doc:200; --z-toast:300; --z-cmdk:400;
+
+  /* ---------- 1.8 Layout metrics ---------- */
+  --nav-w:248px; --nav-w-rail:70px; --topbar-h:60px;
+  --content-max:1560px;
+  --touch:44px;            /* minimum touch target */
+  --control-h:38px;        /* desktop input/button height */
+  --control-h-touch:44px;  /* touch input/button height */
+}
+
+/* ==========================================================================
+   2. SEMANTIC LAYER — LIGHT (default)
+   ========================================================================== */
+:root, html[data-theme="light"]{
+  color-scheme:light;
+
+  --bg:var(--n-75);
+  --bg-tint:radial-gradient(1200px 520px at 12% -8%, rgba(14,165,233,.07), transparent 62%),
+            radial-gradient(900px 480px at 96% 0%, rgba(99,102,241,.05), transparent 58%);
+  --surface:var(--n-0);
+  --surface-2:var(--n-50);
+  --surface-3:var(--n-100);
+  --surface-sunken:#f2f6fb;
+  --surface-hover:var(--n-50);
+  --surface-active:var(--n-100);
+
+  --border:var(--n-200);
+  --border-soft:var(--n-100);
+  --border-strong:var(--n-300);
+
+  --text:var(--n-950);
+  --text-2:var(--n-600);
+  --text-3:var(--n-500);
+  --text-inverse:#fff;
+
+  --accent:var(--aqua-700);
+  --accent-hover:var(--aqua-800);
+  --accent-active:var(--aqua-900);
+  --accent-soft:var(--aqua-100);
+  --accent-softer:var(--aqua-50);
+  --accent-strong:var(--aqua-500);
+  --on-accent:#fff;
+  --ring:rgba(3,105,161,.30);
+  --ring-soft:rgba(3,105,161,.12);
+
+  --ok:var(--green-600); --ok-strong:var(--green-700); --ok-soft:var(--green-100); --ok-softer:var(--green-50); --ok-border:var(--green-200);
+  --warn:var(--amber-600); --warn-strong:var(--amber-700); --warn-soft:var(--amber-100); --warn-softer:var(--amber-50); --warn-border:var(--amber-200);
+  --bad:var(--red-600); --bad-strong:var(--red-700); --bad-soft:var(--red-100); --bad-softer:var(--red-50); --bad-border:var(--red-200);
+  --info:var(--aqua-600); --info-soft:var(--aqua-100); --info-softer:var(--aqua-50);
+  --ai:var(--violet-600); --ai-strong:var(--violet-700); --ai-soft:var(--violet-100); --ai-softer:var(--violet-50); --ai-border:var(--violet-200);
+  --neutral-chip:var(--n-100); --neutral-chip-ink:var(--n-700);
+
+  /* navigation shell */
+  --nav-bg:linear-gradient(180deg,#0c1e30 0%,#0b1b2b 55%,#081725 100%);
+  --nav-bg-solid:#0b1b2b;
+  --nav-text:#9db0c6; --nav-text-hover:#e6edf6; --nav-text-active:#ffffff;
+  --nav-hover:rgba(255,255,255,.055);
+  --nav-active:linear-gradient(90deg,rgba(56,189,248,.22),rgba(56,189,248,.04));
+  --nav-active-bar:var(--aqua-400);
+  --nav-border:rgba(255,255,255,.075);
+  --nav-group:#61748d;
+  --nav-badge:#2a3f57;
+
+  /* charts */
+  --chart-grid:var(--n-100);
+  --chart-axis:var(--n-300);
+  --chart-label:var(--n-500);
+  --chart-1:var(--aqua-600); --chart-2:var(--red-500); --chart-3:var(--teal-600);
+  --chart-4:var(--violet-500); --chart-5:var(--amber-500); --chart-6:var(--indigo-500);
+  --chart-surface:#fff;
+
+  /* overlays */
+  --scrim:rgba(8,20,34,.55);
+  --scrim-soft:rgba(8,20,34,.35);
+  --toast-bg:#0f1c2e; --toast-ink:#e6edf6;
+
+  /* focus + selection */
+  --selection:rgba(3,105,161,.16);
+}
+
+/* ==========================================================================
+   3. SEMANTIC LAYER — DARK
+   ========================================================================== */
+html[data-theme="dark"]{
+  color-scheme:dark;
+
+  --bg:#071320;
+  --bg-tint:radial-gradient(1100px 520px at 10% -10%, rgba(56,189,248,.10), transparent 60%),
+            radial-gradient(900px 480px at 98% -4%, rgba(99,102,241,.08), transparent 58%);
+  --surface:#0d1e2e;
+  --surface-2:#112639;
+  --surface-3:#16304a;
+  --surface-sunken:#0a1927;
+  --surface-hover:#13293d;
+  --surface-active:#17324a;
+
+  --border:#1d3550;
+  --border-soft:#16293d;
+  --border-strong:#2a4763;
+
+  --text:#e8eef7;
+  --text-2:#a2b4c9;
+  --text-3:#7b8ea6;
+  --text-inverse:#071320;
+
+  --accent:var(--aqua-400);
+  --accent-hover:var(--aqua-300);
+  --accent-active:var(--aqua-200);
+  --accent-soft:rgba(56,189,248,.16);
+  --accent-softer:rgba(56,189,248,.09);
+  --accent-strong:var(--aqua-500);
+  --on-accent:#042234;
+  --ring:rgba(56,189,248,.40);
+  --ring-soft:rgba(56,189,248,.16);
+
+  --ok:#34d399; --ok-strong:#6ee7b7; --ok-soft:rgba(16,185,129,.18); --ok-softer:rgba(16,185,129,.10); --ok-border:rgba(16,185,129,.32);
+  --warn:#fbbf24; --warn-strong:#fcd34d; --warn-soft:rgba(245,158,11,.18); --warn-softer:rgba(245,158,11,.10); --warn-border:rgba(245,158,11,.32);
+  --bad:#f87171; --bad-strong:#fca5a5; --bad-soft:rgba(239,68,68,.18); --bad-softer:rgba(239,68,68,.10); --bad-border:rgba(239,68,68,.34);
+  --info:var(--aqua-300); --info-soft:rgba(56,189,248,.16); --info-softer:rgba(56,189,248,.09);
+  --ai:#a78bfa; --ai-strong:#c4b5fd; --ai-soft:rgba(139,92,246,.20); --ai-softer:rgba(139,92,246,.11); --ai-border:rgba(139,92,246,.34);
+  --neutral-chip:#1b3049; --neutral-chip-ink:#c3d1e2;
+
+  --nav-bg:linear-gradient(180deg,#081725 0%,#061220 100%);
+  --nav-bg-solid:#061220;
+  --nav-text:#8ba0b8; --nav-text-hover:#dbe6f2; --nav-text-active:#ffffff;
+  --nav-hover:rgba(255,255,255,.06);
+  --nav-active:linear-gradient(90deg,rgba(56,189,248,.24),rgba(56,189,248,.03));
+  --nav-active-bar:var(--aqua-400);
+  --nav-border:rgba(255,255,255,.08);
+  --nav-group:#5d7189;
+  --nav-badge:#1d3550;
+
+  --chart-grid:#16293d;
+  --chart-axis:#24405c;
+  --chart-label:#8ba0b8;
+  --chart-1:var(--aqua-400); --chart-2:#fb7185; --chart-3:#2dd4bf;
+  --chart-4:#a78bfa; --chart-5:#fbbf24; --chart-6:#818cf8;
+  --chart-surface:#0d1e2e;
+
+  --scrim:rgba(2,8,16,.72);
+  --scrim-soft:rgba(2,8,16,.5);
+  --toast-bg:#13293d; --toast-ink:#e8eef7;
+
+  --sh-1:0 1px 2px rgba(0,0,0,.4);
+  --sh-2:0 2px 6px rgba(0,0,0,.4), 0 8px 20px -10px rgba(0,0,0,.6);
+  --sh-3:0 10px 28px -8px rgba(0,0,0,.6), 0 28px 56px -28px rgba(0,0,0,.7);
+  --sh-4:0 24px 64px -12px rgba(0,0,0,.7), 0 48px 96px -32px rgba(0,0,0,.6);
+  --sh-inset:inset 0 1px 0 rgba(255,255,255,.05);
+  --sh-accent:0 6px 18px -6px rgba(56,189,248,.45);
+  --selection:rgba(56,189,248,.26);
+}
+
+/* ---------- 3.1 Auto theme (follows the OS unless the user picked one) ---------- */
+@media (prefers-color-scheme:dark){
+  html:not([data-theme="light"]):not([data-theme="dark"]){
+    color-scheme:dark;
+    --bg:#071320;
+    --bg-tint:radial-gradient(1100px 520px at 10% -10%, rgba(56,189,248,.10), transparent 60%),
+              radial-gradient(900px 480px at 98% -4%, rgba(99,102,241,.08), transparent 58%);
+    --surface:#0d1e2e; --surface-2:#112639; --surface-3:#16304a; --surface-sunken:#0a1927;
+    --surface-hover:#13293d; --surface-active:#17324a;
+    --border:#1d3550; --border-soft:#16293d; --border-strong:#2a4763;
+    --text:#e8eef7; --text-2:#a2b4c9; --text-3:#7b8ea6; --text-inverse:#071320;
+    --accent:var(--aqua-400); --accent-hover:var(--aqua-300); --accent-active:var(--aqua-200);
+    --accent-soft:rgba(56,189,248,.16); --accent-softer:rgba(56,189,248,.09);
+    --accent-strong:var(--aqua-500); --on-accent:#042234;
+    --ring:rgba(56,189,248,.40); --ring-soft:rgba(56,189,248,.16);
+    --ok:#34d399; --ok-strong:#6ee7b7; --ok-soft:rgba(16,185,129,.18); --ok-softer:rgba(16,185,129,.10); --ok-border:rgba(16,185,129,.32);
+    --warn:#fbbf24; --warn-strong:#fcd34d; --warn-soft:rgba(245,158,11,.18); --warn-softer:rgba(245,158,11,.10); --warn-border:rgba(245,158,11,.32);
+    --bad:#f87171; --bad-strong:#fca5a5; --bad-soft:rgba(239,68,68,.18); --bad-softer:rgba(239,68,68,.10); --bad-border:rgba(239,68,68,.34);
+    --info:var(--aqua-300); --info-soft:rgba(56,189,248,.16); --info-softer:rgba(56,189,248,.09);
+    --ai:#a78bfa; --ai-strong:#c4b5fd; --ai-soft:rgba(139,92,246,.20); --ai-softer:rgba(139,92,246,.11); --ai-border:rgba(139,92,246,.34);
+    --neutral-chip:#1b3049; --neutral-chip-ink:#c3d1e2;
+    --nav-bg:linear-gradient(180deg,#081725 0%,#061220 100%); --nav-bg-solid:#061220;
+    --nav-text:#8ba0b8; --nav-text-hover:#dbe6f2; --nav-text-active:#ffffff;
+    --nav-hover:rgba(255,255,255,.06);
+    --nav-active:linear-gradient(90deg,rgba(56,189,248,.24),rgba(56,189,248,.03));
+    --nav-border:rgba(255,255,255,.08); --nav-group:#5d7189; --nav-badge:#1d3550;
+    --chart-grid:#16293d; --chart-axis:#24405c; --chart-label:#8ba0b8;
+    --chart-1:var(--aqua-400); --chart-2:#fb7185; --chart-3:#2dd4bf;
+    --chart-4:#a78bfa; --chart-5:#fbbf24; --chart-6:#818cf8;
+    --chart-surface:#0d1e2e;
+    --scrim:rgba(2,8,16,.72); --scrim-soft:rgba(2,8,16,.5);
+    --toast-bg:#13293d; --toast-ink:#e8eef7;
+    --sh-1:0 1px 2px rgba(0,0,0,.4);
+    --sh-2:0 2px 6px rgba(0,0,0,.4), 0 8px 20px -10px rgba(0,0,0,.6);
+    --sh-3:0 10px 28px -8px rgba(0,0,0,.6), 0 28px 56px -28px rgba(0,0,0,.7);
+    --sh-4:0 24px 64px -12px rgba(0,0,0,.7), 0 48px 96px -32px rgba(0,0,0,.6);
+    --sh-inset:inset 0 1px 0 rgba(255,255,255,.05);
+    --sh-accent:0 6px 18px -6px rgba(56,189,248,.45);
+    --selection:rgba(56,189,248,.26);
+  }
+}
+
+/* ==========================================================================
+   4. LEGACY ALIASES — inline styles inside js/ still reference these names.
+      Never remove; they must always resolve to the active theme.
+   ========================================================================== */
+:root{
+  --panel:var(--surface);
+  --ink:var(--text);
+  --muted:var(--text-2);
+  --line:var(--border);
+  --accent-d:var(--accent-hover);
+  --green:var(--ok);
+  --amber:var(--warn);
+  --red:var(--bad);
+  --violet:var(--ai);
+}
+
+/* ==========================================================================
+   5. BASE / RESET
+   ========================================================================== */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+
+body{
+  font-family:var(--font-sans);
+  font-size:var(--fs-base);
+  line-height:var(--lh-normal);
+  color:var(--text);
+  background-color:var(--bg);
+  background-image:var(--bg-tint);
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  font-feature-settings:"cv05" 1,"ss01" 1;
+  text-rendering:optimizeLegibility;
+}
+
+h1,h2,h3,h4,h5{margin:0;font-weight:var(--fw-bold);line-height:var(--lh-snug);letter-spacing:var(--tr-tight);color:var(--text)}
+p{margin:0}
+button{font-family:inherit;font-size:inherit;color:inherit}
+input,select,textarea{font-family:inherit}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+img,svg{display:block;max-width:100%}
+table{border-collapse:collapse}
+
+::selection{background:var(--selection)}
+
+/* scrollbars — themed, unobtrusive */
+*{scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:var(--r-full);border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:var(--n-400);background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-corner{background:transparent}
+
+/* accessibility — visible keyboard focus everywhere */
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-xs)}
+.inp:focus-visible,.pw-toggle:focus-visible{outline-offset:1px}
+
+.skip-link{
+  position:fixed;top:var(--sp-2);left:50%;transform:translate(-50%,-160%);
+  z-index:calc(var(--z-cmdk) + 1);background:var(--surface);color:var(--text);
+  border:1px solid var(--border-strong);border-radius:var(--r-full);
+  padding:var(--sp-2) var(--sp-4);font-weight:var(--fw-semibold);font-size:var(--fs-sm);
+  box-shadow:var(--sh-3);transition:transform var(--dur-2) var(--ease-out);
+}
+.skip-link:focus{transform:translate(-50%,0);text-decoration:none}
+
+.sr-only{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important;scroll-behavior:auto!important;
+  }
+}
+
+/* ==========================================================================
+   6. TYPOGRAPHY UTILITIES
+   ========================================================================== */
+.t-2xs{font-size:var(--fs-2xs)} .t-xs{font-size:var(--fs-xs)} .t-sm{font-size:var(--fs-sm)}
+.t-md{font-size:var(--fs-md)}   .t-lg{font-size:var(--fs-lg)} .t-xl{font-size:var(--fs-xl)}
+.t-2xl{font-size:var(--fs-2xl)} .t-3xl{font-size:var(--fs-3xl)}
+
+.eyebrow{
+  font-size:var(--fs-2xs);font-weight:var(--fw-bold);color:var(--text-3);
+  text-transform:uppercase;letter-spacing:var(--tr-caps);
+}
+.h-page{font-size:var(--fs-xl);font-weight:var(--fw-extrabold);letter-spacing:var(--tr-tight);line-height:var(--lh-tight)}
+.h-section{font-size:var(--fs-md);font-weight:var(--fw-bold);letter-spacing:var(--tr-tight)}
+.tnum{font-variant-numeric:tabular-nums lining-nums}
+.mono{font-family:var(--font-mono);font-size:.94em;letter-spacing:-.01em}
+.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.clamp-3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+/* money / delta indicators */
+.delta{
+  display:inline-flex;align-items:center;gap:3px;font-size:var(--fs-2xs);
+  font-weight:var(--fw-bold);padding:2px var(--sp-15);border-radius:var(--r-full);
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.delta.up{color:var(--ok-strong);background:var(--ok-softer)}
+.delta.down{color:var(--bad-strong);background:var(--bad-softer)}
+.delta.flat{color:var(--text-3);background:var(--surface-3)}
+
+/* ==========================================================================
+   7. SPACING / LAYOUT UTILITIES (4px grid)
+   ========================================================================== */
+.gap-1{gap:var(--sp-1)} .gap-2{gap:var(--sp-2)} .gap-3{gap:var(--sp-3)}
+.gap-4{gap:var(--sp-4)} .gap-5{gap:var(--sp-5)} .gap-6{gap:var(--sp-6)}
+
+.p-3{padding:var(--sp-3)} .p-4{padding:var(--sp-4)} .p-5{padding:var(--sp-5)}
+.px-4{padding-inline:var(--sp-4)} .py-3{padding-block:var(--sp-3)}
+
+.mt-auto{margin-top:auto}
+.w-full{width:100%}
+.center{justify-content:center}
+.wrap{flex-wrap:wrap}
+.grow{flex:1 1 auto;min-width:0}
+
+/* soft surface variants used across views (replaces inline #f8fafc) */
+.soft{background:var(--surface-2)!important}
+.sunken{background:var(--surface-sunken)!important}
+.divider{height:1px;background:var(--border-soft);border:0;margin:var(--sp-4) 0}
+.divider-dashed{height:0;border:0;border-top:1px dashed var(--border-soft);margin:var(--sp-3) 0}

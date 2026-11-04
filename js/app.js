@@ -213,7 +213,9 @@ const CHIP = {
   'Job confirmation':'indigo','Dispatch':'sky','Quote sent':'violet','Invoice sent':'teal',
   'Payment reminder':'red','Payment received':'green','Maintenance reminder':'amber','Job complete':'green'
 };
-function chip(label){ return `<span class="chip c-${CHIP[label]||'gray'}">${esc(label)}</span>`; }
+/* Optional second argument overrides the mapped tone (used for computed labels
+   like "Overdue 3d" that have no CHIP entry). */
+function chip(label, tone){ return `<span class="chip c-${tone||CHIP[label]||'gray'}">${esc(label)}</span>`; }
 const JB_CLASS = {'Scheduled':'jb-sched','Dispatched':'jb-disp','In Progress':'jb-prog','Completed':'jb-done','On Hold':'jb-hold','Cancelled':'jb-cancel'};
 
 /* ================= scheduling helpers ================= */
@@ -334,6 +336,23 @@ const ICONS = {
   userPlus:'<circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.2 3.4-5 6.5-5s5.7 1.8 6.5 5"/><path d="M19 6v6M16 9h6"/>',
   send:'<path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/>',
   sync:'<path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2" transform="translate(0,0)"/><path d="M21 3v6h-6M3 21v-6h6"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/>',
+  sun:'<circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/>',
+  moon:'<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>',
+  trendUp:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  trendDown:'<path d="M3 7l6 6 4-4 8 8"/><path d="M15 17h6v-6"/>',
+  wallet:'<path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H18a2 2 0 0 1 2 2v1.5"/><rect x="3" y="7.5" width="18" height="12" rx="2.4"/><circle cx="16.6" cy="13.6" r="1.3"/>',
+  target:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.6"/><circle cx="12" cy="12" r="1"/>',
+  layers:'<path d="M12 3l9 5-9 5-9-5z"/><path d="M3.5 12.5L12 17l8.5-4.5M3.5 16.5L12 21l8.5-4.5"/>',
+  logout:'<path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H15"/><path d="M10 8l-4 4 4 4M6 12h10"/>',
+  chevD:'<path d="M6 9l6 6 6-6"/>',
+  sliders:'<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
+  star:'<path d="M12 3.6l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 17l-5.3 2.8 1.1-5.9L3.5 9.8l5.9-.8z"/>',
+  activity:'<path d="M3 12h4l2.5-6 4 12L16 12h5"/>',
+  shield:'<path d="M12 3l7.5 3v6c0 4.4-3.1 7.9-7.5 9.4C7.6 19.9 4.5 16.4 4.5 12V6z"/><path d="M9.2 12.2l2 2 3.6-3.9"/>',
+  clipboard:'<rect x="5" y="4.5" width="14" height="16.5" rx="2.2"/><path d="M9 4.5V3.6A1.6 1.6 0 0 1 10.6 2h2.8A1.6 1.6 0 0 1 15 3.6v.9z"/><path d="M9 11h6M9 15h4"/>',
+  database:'<ellipse cx="12" cy="6" rx="7.5" ry="3"/><path d="M4.5 6v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V6"/><path d="M4.5 12v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/>',
+  arrowR:'<path d="M4 12h15"/><path d="M13 6l6 6-6 6"/>',
   wifi:'<path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0"/><path d="M12 19h.01"/>',
   wa:'<path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2m0 1.8a8.2 8.2 0 1 1-4.2 15.3l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 0 1 12 3.8M9 8.2c-.2 0-.4.1-.6.2-.2.1-.5.2-.7.4-.2.2-.9.9-.9 2.1 0 1.3.9 2.5 1 2.7.1.2 1.8 3 4.5 4 2.2.8 2.7.7 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2l-.4-.2-1.5-.7c-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.1-.2 0-.4.1-.5l.5-.6c.1-.2.2-.3.1-.5l-.7-1.7c-.2-.4-.3-.4-.5-.4z"/>'
 };
@@ -342,36 +361,141 @@ function icon(n, size=18){
   return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[n]||''}</svg>`;
 }
 
-/* ================= charts (hand-rolled SVG, no CDN) ================= */
-function areaChart(vals, labels, {w=640, h=170, color='#0369a1'} = {}){
-  const max = Math.max(1, ...vals);
-  const padL = 10, padR = 10, padT = 16, padB = 24;
-  const iw = w - padL - padR, ih = h - padT - padB;
-  const step = iw / Math.max(1, vals.length - 1);
-  const pts = vals.map((v,i) => [padL + i*step, padT + ih - (v/max)*ih]);
-  const line = pts.map((p,i) => (i?'L':'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
-  const area = line + ` L ${pts[pts.length-1][0].toFixed(1)} ${(padT+ih).toFixed(1)} L ${pts[0][0].toFixed(1)} ${(padT+ih).toFixed(1)} Z`;
-  const grid = [0.25,0.5,0.75,1].map(f =>
-    `<line x1="${padL}" x2="${w-padR}" y1="${(padT+ih - f*ih).toFixed(1)}" y2="${(padT+ih - f*ih).toFixed(1)}" stroke="#eef2f7" stroke-width="1"/>`).join('');
-  const dots = pts.map((p,i) =>
-    `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${i===pts.length-1?4:3}" fill="${i===pts.length-1?color:'#fff'}" stroke="${color}" stroke-width="1.6"/>`).join('');
-  const xl = labels.map((l,i) =>
-    `<text x="${pts[i][0].toFixed(1)}" y="${h-6}" font-size="10.5" fill="#5b6b85" text-anchor="middle">${esc(l)}</text>`).join('');
-  const last = `<text x="${pts[pts.length-1][0].toFixed(1)}" y="${(pts[pts.length-1][1]-8).toFixed(1)}" font-size="11" font-weight="700" fill="${color}" text-anchor="end">${money(vals[vals.length-1])}</text>`;
-  return `<svg viewBox="0 0 ${w} ${h}" class="chart" preserveAspectRatio="xMidYMid meet">${grid}<path d="${area}" fill="${color}" opacity="0.08"/><path d="${line}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round"/>${dots}${xl}${last}</svg>`;
+/* ================= charts (hand-rolled SVG, no CDN) =================
+   Design-system charts: nice axis ticks, labelled gridlines, rounded bars,
+   smooth area fills, native tooltips and an HTML legend. All neutrals come
+   from CSS tokens so the charts follow the light/dark theme. */
+let __uidSeq = 0;
+const cuid = p => `${p}${(++__uidSeq).toString(36)}${Math.random().toString(36).slice(2,5)}`;
+
+/* Round an axis maximum up to a readable 1 / 2 / 2.5 / 5 x 10^n step so the
+   gridlines land on numbers a human can read at a glance. */
+function niceMax(v, ticks){
+  ticks = ticks || 4;
+  v = Number(v) || 0;
+  if(v <= 0) return ticks;
+  const raw = v / ticks;
+  const mag = Math.pow(10, Math.floor(Math.log(raw) / Math.LN10));
+  const norm = raw / mag;
+  const step = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10) * mag;
+  return step * ticks;
 }
-function donut(segs, {size=150, thick=20} = {}){
-  const total = segs.reduce((t,s)=>t+s.value,0);
-  const r = (size - thick)/2, c = size/2, circ = 2*Math.PI*r;
+/* compact axis labels: 1250000 -> 1.25M, 120000 -> 120k */
+function axisFmt(n){
+  const a = Math.abs(Number(n) || 0);
+  if(a >= 1e6){ const x = n / 1e6; return (a >= 1e7 ? x.toFixed(0) : String(+x.toFixed(2))) + 'M'; }
+  if(a >= 1e3){ const x = n / 1e3; return (a >= 1e4 ? x.toFixed(0) : String(+x.toFixed(1))) + 'k'; }
+  return String(+n.toFixed(a < 10 ? 1 : 0));
+}
+const moneyAxis = n => 'KSh ' + axisFmt(n);
+
+/* horizontal gridlines + left-hand value axis */
+function axisGrid(max, o){
+  const {padL, padR, padT, ih, w, ticks, fmt} = o;
+  let g = '';
+  for(let i = 0; i <= ticks; i++){
+    const f = i / ticks;
+    const y = (padT + ih - f * ih).toFixed(1);
+    g += `<line class="chart-grid" x1="${padL}" x2="${(w - padR).toFixed(1)}" y1="${y}" y2="${y}"${i === 0 ? ' stroke-width="1.4"' : ''}/>`;
+    g += `<text class="chart-lab" x="${padL - 8}" y="${(+y + 3.5).toFixed(1)}" text-anchor="end">${esc(fmt(max * f))}</text>`;
+  }
+  return g;
+}
+/* Catmull-Rom -> cubic bezier, for a smooth but honest trend line */
+function smoothPath(pts, tension){
+  if(pts.length < 2) return pts.length ? `M ${pts[0][0]} ${pts[0][1]}` : '';
+  const t = tension == null ? 0.32 : tension;
+  let d = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for(let i = 0; i < pts.length - 1; i++){
+    const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+    const c1x = p1[0] + (p2[0] - p0[0]) * t / 2, c1y = p1[1] + (p2[1] - p0[1]) * t / 2;
+    const c2x = p2[0] - (p3[0] - p1[0]) * t / 2, c2y = p2[1] - (p3[1] - p1[1]) * t / 2;
+    d += ` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
+function legendHTML(rows){
+  if(!rows || !rows.length) return '';
+  return `<div class="chart-legend">` + rows.map(r =>
+    `<span class="r"><i class="dotc" style="background:${r.color}"></i>${esc(r.label)}</span>`).join('') + `</div>`;
+}
+
+function areaChart(vals, labels, {w=640, h=190, color='#0369a1', fmt=money, ticks=4, smooth=true} = {}){
+  vals = (vals || []).map(v => Number(v) || 0);
+  labels = labels || [];
+  if(!vals.length) return '<div class="empty mini">No data yet</div>';
+  const max = niceMax(Math.max(1, ...vals), ticks);
+  const padL = 52, padR = 14, padT = 16, padB = 26;
+  const iw = w - padL - padR, ih = h - padT - padB;
+  const step = vals.length > 1 ? iw / (vals.length - 1) : 0;
+  const pts = vals.map((v, i) => [padL + i * step, padT + ih - (v / max) * ih]);
+  const gid = cuid('ag');
+  const line = smooth ? smoothPath(pts) : pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const base = (padT + ih).toFixed(1);
+  const area = `${line} L ${pts[pts.length - 1][0].toFixed(1)} ${base} L ${pts[0][0].toFixed(1)} ${base} Z`;
+  const dots = pts.map((p, i) =>
+    `<g><circle class="chart-surface" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${i === pts.length - 1 ? 4.6 : 3.4}" stroke="${color}" stroke-width="2"/>` +
+    `<title>${esc(labels[i] || '')}${labels[i] ? ' — ' : ''}${fmt(vals[i])}</title></g>`).join('');
+  const hits = pts.map((p, i) =>
+    `<rect class="chart-hit" x="${(p[0] - step / 2).toFixed(1)}" y="${padT}" width="${Math.max(step, 12).toFixed(1)}" height="${ih}" rx="4"><title>${esc(labels[i] || '')}${labels[i] ? ' — ' : ''}${fmt(vals[i])}</title></rect>`).join('');
+  const xl = labels.map((l, i) => pts[i] ?
+    `<text class="chart-lab" x="${pts[i][0].toFixed(1)}" y="${h - 7}" text-anchor="middle">${esc(l)}</text>` : '').join('');
+  const lastP = pts[pts.length - 1];
+  const last = `<text x="${(lastP[0] - 8).toFixed(1)}" y="${(lastP[1] - 10).toFixed(1)}" font-size="11" font-weight="700" fill="${color}" text-anchor="end" style="font-family:var(--font-sans)">${esc(fmt(vals[vals.length - 1]))}</text>`;
+  return `<svg viewBox="0 0 ${w} ${h}" class="chart" preserveAspectRatio="xMidYMid meet" role="img">
+    <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${color}" stop-opacity=".28"/>
+      <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${axisGrid(max, {padL, padR, padT, ih, w, ticks, fmt: moneyAxis})}
+    <path d="${area}" fill="url(#${gid})"/>
+    <path d="${line}" fill="none" stroke="${color}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    ${dots}${hits}${xl}${last}</svg>`;
+}
+
+/* Donut with an optional centre read-out. */
+function donut(segs, {size=168, thick=22, centerTop='', centerSub='', gap=1.5} = {}){
+  segs = (segs || []).filter(s => s && s.value > 0);
+  const total = segs.reduce((t, s) => t + s.value, 0);
+  const r = (size - thick) / 2, c = size / 2, circ = 2 * Math.PI * r;
   let acc = 0;
   const arcs = total > 0
-    ? segs.filter(s=>s.value>0).map(s => {
-        const len = s.value/total*circ;
-        const el = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${thick}" stroke-dasharray="${len.toFixed(2)} ${(circ-len).toFixed(2)}" stroke-dashoffset="${(-acc).toFixed(2)}" transform="rotate(-90 ${c} ${c})"/>`;
-        acc += len; return el;
+    ? segs.map(s => {
+        const len = Math.max(0, s.value / total * circ - (segs.length > 1 ? gap : 0));
+        const pct = Math.round(s.value / total * 100);
+        const el = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${thick}" stroke-linecap="round" stroke-dasharray="${len.toFixed(2)} ${(circ - len).toFixed(2)}" stroke-dashoffset="${(-acc).toFixed(2)}" transform="rotate(-90 ${c} ${c})"><title>${esc(s.label || '')} — ${pct}%</title></circle>`;
+        acc += s.value / total * circ; return el;
       }).join('')
-    : `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="#e2e8f0" stroke-width="${thick}"/>`;
-  return `<svg viewBox="0 0 ${size} ${size}" style="width:${size}px;height:${size}px">${arcs}</svg>`;
+    : `<circle class="chart-empty" cx="${c}" cy="${c}" r="${r}" fill="none" stroke-width="${thick}"/>`;
+  const mid = (centerTop || centerSub)
+    ? `<g text-anchor="middle" style="font-family:var(--font-sans)">
+         <text x="${c}" y="${c - (centerSub ? 2 : -5)}" font-size="17" font-weight="800" style="fill:var(--text)">${esc(centerTop)}</text>
+         ${centerSub ? `<text x="${c}" y="${c + 16}" font-size="10.5" font-weight="600" style="fill:var(--text-3)">${esc(centerSub)}</text>` : ''}
+       </g>`
+    : '';
+  return `<svg viewBox="0 0 ${size} ${size}" style="width:${size}px;height:${size}px;max-width:100%" role="img">${arcs}${mid}</svg>`;
+}
+
+/* Tiny trend line for KPI cards. */
+function sparkline(vals, {w=180, h=34, color='#0369a1', fill=true} = {}){
+  vals = (vals || []).map(v => Number(v) || 0);
+  if(vals.length < 2) return '';
+  const max = Math.max(1, ...vals), min = Math.min(0, ...vals);
+  const span = (max - min) || 1;
+  const pad = 3;
+  const step = (w - pad * 2) / (vals.length - 1);
+  const pts = vals.map((v, i) => [pad + i * step, h - pad - ((v - min) / span) * (h - pad * 2)]);
+  const gid = cuid('sg');
+  const line = smoothPath(pts);
+  const area = `${line} L ${pts[pts.length - 1][0].toFixed(1)} ${h} L ${pts[0][0].toFixed(1)} ${h} Z`;
+  const dot = pts[pts.length - 1];
+  return `<svg viewBox="0 0 ${w} ${h}" class="chart spark" preserveAspectRatio="none" aria-hidden="true">
+    ${fill ? `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${color}" stop-opacity=".30"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+    </linearGradient></defs><path d="${area}" fill="url(#${gid})"/>` : ''}
+    <path d="${line}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <circle cx="${dot[0].toFixed(1)}" cy="${dot[1].toFixed(1)}" r="2.8" fill="${color}"/>
+  </svg>`;
 }
 
 /* ================= business pipeline (Lead→Quote→Scheduled→In Progress→Completed→Invoiced→Paid) ================= */
@@ -457,47 +581,58 @@ function expMonthTotal(mk){
 }
 
 /* ================= additional charts ================= */
-function groupedBar(valsA, valsB, labels, {w=640, h=200, colorA='#0369a1', colorB='#dc2626', legendA='Revenue', legendB='Expenses', fmt=money}={}){
-  const max = Math.max(1, ...valsA, ...valsB);
-  const padL=10, padR=10, padT=30, padB=24;
+function groupedBar(valsA, valsB, labels, {w=640, h=214, colorA='#0284c7', colorB='#ef4444', legendA='Revenue', legendB='Expenses', fmt=money, ticks=4}={}){
+  valsA = (valsA || []).map(v => Number(v) || 0);
+  valsB = (valsB || []).map(v => Number(v) || 0);
+  labels = labels || [];
+  if(!valsA.length) return '<div class="empty mini">No data yet</div>';
+  const max = niceMax(Math.max(1, ...valsA, ...valsB), ticks);
+  const padL=52, padR=14, padT=14, padB=28;
   const iw = w-padL-padR, ih = h-padT-padB;
   const groupW = iw/valsA.length;
-  const barW = Math.min(24, groupW/3);
-  const bar = (x, v, color) => {
-    const bh = Math.max(v>0?2:0, (v/max)*ih);
-    return `<rect x="${x.toFixed(1)}" y="${(padT+ih-bh).toFixed(1)}" width="${barW}" height="${bh.toFixed(1)}" rx="3" fill="${color}"><title>${fmt(v)}</title></rect>`;
+  const barW = Math.max(6, Math.min(22, groupW/3.1));
+  const bar = (x, v, color, lbl) => {
+    const bh = Math.max(v>0?2.5:0, (v/max)*ih);
+    const y = padT+ih-bh;
+    return `<rect class="chart-bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="${Math.min(5, barW/2).toFixed(1)}" fill="${color}" opacity="${v>0?1:.22}"><title>${esc(lbl)} — ${esc(fmt(v))}</title></rect>`;
   };
   const bars = labels.map((lb,i)=>{
     const cx = padL + i*groupW + groupW/2;
-    return bar(cx-barW-2, valsA[i], colorA) + bar(cx+2, valsB[i], colorB);
+    return bar(cx-barW-2, valsA[i], colorA, `${lb||''} ${legendA}`) + bar(cx+2, valsB[i], colorB, `${lb||''} ${legendB}`);
   }).join('');
-  const lbs = labels.map((lb,i)=>`<text x="${(padL+i*groupW+groupW/2).toFixed(1)}" y="${h-8}" text-anchor="middle" font-size="10" fill="var(--muted)">${esc(lb||'')}</text>`).join('');
-  const legend = `<text x="${w-padR-4}" y="14" text-anchor="end" font-size="10" font-weight="700"><tspan fill="${colorA}">■ ${legendA}</tspan><tspan dx="10" fill="${colorB}">■ ${legendB}</tspan></text>`;
-  return `<svg viewBox="0 0 ${w} ${h}" class="chart" preserveAspectRatio="xMidYMid meet">${legend}${bars}${lbs}</svg>`;
+  const lbs = labels.map((lb,i)=>`<text class="chart-lab" x="${(padL+i*groupW+groupW/2).toFixed(1)}" y="${h-8}" text-anchor="middle">${esc(lb||'')}</text>`).join('');
+  const svg = `<svg viewBox="0 0 ${w} ${h}" class="chart" preserveAspectRatio="xMidYMid meet" role="img">
+    ${axisGrid(max, {padL, padR, padT, ih, w, ticks, fmt: moneyAxis})}${bars}${lbs}</svg>`;
+  return svg + legendHTML([{label:legendA, color:colorA}, {label:legendB, color:colorB}]);
 }
-function barChart(vals, labels, {w=640, h=200, color='#0f766e', fmt=fmtInt}={}){
-  const max = Math.max(1, ...vals);
-  const padL=10, padR=10, padT=18, padB=24;
+function barChart(vals, labels, {w=640, h=214, color='#0d9488', fmt=fmtInt, ticks=4, valueLabels=true}={}){
+  vals = (vals || []).map(v => Number(v) || 0);
+  labels = labels || [];
+  if(!vals.length) return '<div class="empty mini">No data yet</div>';
+  const max = niceMax(Math.max(1, ...vals), ticks);
+  const padL=42, padR=14, padT=20, padB=28;
   const iw = w-padL-padR, ih = h-padT-padB;
   const groupW = iw/vals.length;
-  const barW = Math.min(34, groupW*0.55);
+  const barW = Math.max(8, Math.min(38, groupW*0.56));
   const bars = vals.map((v,i)=>{
-    const bh = Math.max(v>0?2:0, (v/max)*ih);
+    const bh = Math.max(v>0?2.5:0, (v/max)*ih);
     const x = padL + i*groupW + (groupW-barW)/2;
-    return `<rect x="${x.toFixed(1)}" y="${(padT+ih-bh).toFixed(1)}" width="${barW}" height="${bh.toFixed(1)}" rx="4" fill="${color}" opacity="${v?1:0.25}"><title>${fmt(v)}</title></rect>`
-      + (v ? `<text x="${(x+barW/2).toFixed(1)}" y="${(padT+ih-bh-5).toFixed(1)}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--muted)">${fmt(v)}</text>` : '');
+    const y = padT+ih-bh;
+    return `<rect class="chart-bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="${Math.min(6, barW/2).toFixed(1)}" fill="${color}" opacity="${v?1:.22}"><title>${esc(labels[i]||'')} — ${esc(fmt(v))}</title></rect>`
+      + (v && valueLabels ? `<text class="chart-val" x="${(x+barW/2).toFixed(1)}" y="${(y-6).toFixed(1)}" text-anchor="middle">${esc(fmt(v))}</text>` : '');
   }).join('');
-  const lbs = labels.map((lb,i)=>`<text x="${(padL+i*groupW+groupW/2).toFixed(1)}" y="${h-8}" text-anchor="middle" font-size="10" fill="var(--muted)">${esc(lb||'')}</text>`).join('');
-  return `<svg viewBox="0 0 ${w} ${h}" class="chart" preserveAspectRatio="xMidYMid meet">${bars}${lbs}</svg>`;
+  const lbs = labels.map((lb,i)=>`<text class="chart-lab" x="${(padL+i*groupW+groupW/2).toFixed(1)}" y="${h-8}" text-anchor="middle">${esc(lb||'')}</text>`).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" class="chart" preserveAspectRatio="xMidYMid meet" role="img">
+    ${axisGrid(max, {padL, padR, padT, ih, w, ticks, fmt: axisFmt})}${bars}${lbs}</svg>`;
 }
-function hbarList(rows, {fmt=money, color='#0369a1'}={}){
+function hbarList(rows, {fmt=money, color='#0284c7'}={}){
   const max = Math.max(1, ...rows.map(r=>r.value));
   if(!rows.length) return '<div class="empty mini">No data yet</div>';
   return `<div class="hbars">` + rows.map(r=>`
     <div class="hbar-row">
       <span class="hbar-lbl" title="${esc(r.label)}">${esc(r.label)}</span>
       <div class="hbar"><i style="width:${Math.max(2, r.value/max*100).toFixed(1)}%;background:${r.color||color}"></i></div>
-      <b class="hbar-val">${fmt(r.value)}</b>
+      <b class="hbar-val" title="${esc(fmt(r.value))}">${esc(fmt(r.value))}</b>
     </div>`).join('') + `</div>`;
 }
 
@@ -646,6 +781,9 @@ function go(view, params = {}){
   window.scrollTo(0,0);
   if(v.mount) v.mount(params);
   if(typeof refreshBell === 'function') refreshBell();
+  if(typeof refreshNavBadges === 'function') refreshNavBadges();
+  if(typeof updateTopSub === 'function') updateTopSub();
+  if(typeof closeMenu === 'function') closeMenu();
 }
 function reRender(){ go(ui.view, ui.params); }
 

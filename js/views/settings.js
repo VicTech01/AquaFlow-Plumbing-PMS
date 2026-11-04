@@ -61,7 +61,7 @@ VIEWS.settings = {
         </div>
         <div class="card">
           <h3>${icon('users',15)} Team</h3>
-          ${db.technicians.length ? `<div class="tbl-wrap"><table class="tbl">
+          ${db.technicians.length ? `<div class="tbl-wrap"><table class="tbl stick">
             <thead><tr><th>Name</th><th class="resp-sm">Role</th><th class="resp-sm">Phone</th><th class="num resp-sm">Rate</th><th>Skills</th><th></th></tr></thead>
             <tbody>
               ${db.technicians.map(t => `<tr>
@@ -95,7 +95,7 @@ VIEWS.settings = {
           ${accounts.length > 1 ? `
           <div class="muted small mt12">Other accounts on this device:</div>
           ${accounts.filter(a => a.email !== acc.email).map(a => `
-            <div class="spread" style="padding:5px 0;border-top:1px dashed #eef2f7">
+            <div class="spread" style="padding:5px 0;border-top:1px dashed var(--border-soft)">
               <div><b class="small">${esc(a.name)}</b><div class="subrow">${esc(a.email)}</div></div>
               <div class="row" style="gap:6px">
                 <button class="btn ghost sm" data-acc-switch="${esc(a.email)}">Switch</button>
@@ -112,7 +112,7 @@ VIEWS.settings = {
             <label class="btn ghost" style="cursor:pointer">${icon('upload',14)} Import JSON<input type="file" id="st-import" accept="application/json" style="display:none"></label>
             <button class="btn danger" id="st-reset">${icon('trash',14)} Reset demo data</button>
           </div>
-          <div class="mt12" style="border-top:1px dashed #eef2f7;padding-top:12px">
+          <div class="mt12" style="border-top:1px dashed var(--border-soft);padding-top:12px">
             <b class="small">Automatic backups</b>
             <div class="muted small">A snapshot of your whole business is saved on this device as you work (last 3 kept, one per 5 minutes). Restore one if anything ever goes wrong.</div>
             <div id="st-baklist" class="mt8"></div>
@@ -123,7 +123,7 @@ VIEWS.settings = {
           </div>
           ${db.memoryMode ? '<div class="badge-warn mt12">Storage is unavailable in this context — changes will not persist after reload (demo mode).</div>' : ''}
         </div>
-        <div class="card" style="background:#f8fafc">
+        <div class="card soft">
           <h3>${icon('spark',15)} About the AI estimate assistant</h3>
           <p class="muted small" style="margin:0">The assistant is a local rules-pricing model (<b>aquaflow-rules-v1</b>) built from your labor rates, live inventory prices, standard scopes of work and zone travel fees. It explains every line it generates and flags stock problems. You stay in control — nothing is sent until you approve.</p>
         </div>

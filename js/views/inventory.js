@@ -38,7 +38,7 @@ VIEWS.inventory = {
         </div>
         <button class="btn primary" id="iv-new">${icon('plus',15)} Add item</button>
       </div>
-      <div class="tbl-wrap"><table class="tbl">
+      <div class="tbl-wrap"><table class="tbl stick">
         <thead><tr><th>Item</th><th class="resp-sm">SKU</th><th class="resp-md">Category</th><th class="num">In stock</th><th class="num resp-sm">Reorder at</th><th class="num resp-sm">Unit cost</th><th class="num">Sale price</th><th class="num resp-sm">Value</th><th>Status</th><th></th></tr></thead>
         <tbody>
           ${stock.length ? stock.map(i=>{

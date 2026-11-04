@@ -19,7 +19,7 @@ VIEWS.whatsapp = {
       </div>
     </div>
     <div class="card">
-      <div class="row mb12" style="flex-wrap:wrap">
+      <div class="filter-bar">
         <select class="inp" id="wa-purpose" style="max-width:190px">
           <option value="">All purposes</option>
           ${[...new Set(db.outbox.map(o=>o.purpose))].map(p=>`<option ${waPurpose===p?'selected':''}>${esc(p)}</option>`).join('')}
@@ -30,7 +30,7 @@ VIEWS.whatsapp = {
         <span class="muted small">${items.length} message${items.length===1?'':'s'}</span>
         <button class="btn ghost sm" id="wa-clear" style="margin-left:auto">Clear sent</button>
       </div>
-      <div class="tbl-wrap"><table class="tbl">
+      <div class="tbl-wrap"><table class="tbl stick">
         <thead><tr><th class="resp-sm">Created</th><th>To</th><th class="resp-md">Purpose</th><th>Message</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>
           ${items.length ? items.map(o => `

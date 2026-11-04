@@ -48,12 +48,12 @@ npm run build:win        # → dist/AquaFlow PMS Setup x.y.z.exe (NSIS installer
 ## Run the web version
 
 ```bash
-cd plumbpro
-python3 -m http.server 8080
-# open http://localhost:8080
+npm run preview        # → http://localhost:8484 (served by the real LAN server)
+PORT=3000 npm run preview
 ```
 
-Or open `index.html` directly in a browser (data persists via localStorage).
+Any static server works too (`python3 -m http.server 8080`), or open `index.html`
+directly in a browser — data persists via localStorage either way.
 
 ## Modules
 
@@ -91,9 +91,42 @@ Lead → Quotation → Scheduled → In Progress → Completed → Invoiced → 
 - Invoiced jobs pull their **Labour / Materials / Transport** breakdown from line-item kinds
 - Payments close the loop: balance ≤ 0 → **Paid**
 
+## Design system (v2.0)
+
+Full reference: **[`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md)** — principles, tokens,
+components, breakpoints, accessibility rules and how to extend it.
+
+- **Three-layer tokens** (`css/tokens.css`): fixed primitives (Aqua / Abyss / neutral /
+  semantic ramps) → semantic layer (`--surface`, `--text-2`, `--accent`, `--ok`…) →
+  components. `css/styles.css` contains **no hardcoded colours**.
+- **Light + dark + auto.** The theme swaps the semantic layer only, persists to
+  `localStorage`, follows the OS until you choose, is applied before first paint, and
+  **never touches printed documents** — a quote prints identically from either theme.
+- **Type scale instead of ad-hoc sizes.** 9 steps (11 → 30 px), 4 line-heights, tracking
+  for display and uppercase micro-labels. Every currency amount, count, ref and date uses
+  tabular lining numerals so columns of money stay aligned.
+- **4 px space grid, 7 radii, 4 elevation steps** applied consistently to every surface.
+- **Grouped navigation** — 14 modules in 6 labelled sections (Overview · Work · Sales ·
+  Money · Stock & messages · System) with live count badges (overdue invoices, low stock,
+  quotes awaiting approval, jobs today…), tooltips, and a collapsible icon rail (`Ctrl+B`).
+- **Command palette / global search** (`Ctrl+K`) — one box over customers, jobs, quotes,
+  invoices, payments, leads, materials, technicians, expenses and maintenance, plus quick
+  actions and module jumps. Ranked, match-highlighted, fully keyboard-navigable, read-only.
+- **Shortcuts** — `Ctrl+K` search · `Ctrl+J` job · `Ctrl+Q` quote · `Ctrl+I` invoice ·
+  `Ctrl+P` payment · `Ctrl+B` sidebar · `Ctrl+D` theme · `?` help.
+- **Rebuilt charts** — "nice-number" axes, labelled gridlines, legends, native tooltips,
+  rounded bars, smoothed gradient areas, donut centre read-outs and KPI sparklines. All
+  neutrals are tokens, so charts invert with the theme.
+- **Decision-first dashboard** — Money (revenue / expenses / net profit / outstanding with
+  month-on-month deltas and sparklines) → **Action required** (overdue invoices, quotes
+  awaiting approval, jobs with no crew, low stock, maintenance due — each a deep link) →
+  Work → Sales → Stock & service → Trends. Every tile is clickable and routes to its module.
+- **Contextual topbar** — the page title is joined by a live one-line summary of that
+  module ("Ksh 34,192 outstanding · 2 overdue"), plus search, theme and an account menu.
+
 ## Responsive UI/UX
 
-**Desktop (≥901px)** — fixed sidebar navigation, 2/3-column layouts, hover states, soft card shadows, full-width tables, print-ready invoices (🖨 Print on any invoice → clean A4 layout with business header).
+**Desktop (≥901px)** — fixed sidebar navigation (collapsible to an icon rail), 2/3-column layouts, hover states, soft card shadows, full-width tables, print-ready invoices (🖨 Print on any invoice → clean A4 layout with business header).
 
 **Mobile (≤900px)** — purpose-built, not just scaled:
 - **Bottom tab bar**: Home · Jobs · Dispatch · Customers · More (safe-area aware, frosted glass)
@@ -102,6 +135,9 @@ Lead → Quotation → Scheduled → In Progress → Completed → Invoiced → 
 - **Full-screen bottom-sheet modals** with 44px+ tap targets and full-width footer buttons
 - **Responsive tables & kanban**: columns collapse at 820px/560px; pipeline stepper hides stage labels except the current one
 - 2-up KPI grid, stacked forms, larger touch targets for checkboxes
+- **44 px minimum touch targets** below 640px, `env(safe-area-inset-*)` on tabbar/FAB/sheets
+- **Sticky identity column** on wide tables (≤760px) so a horizontally scrolled row still says whose it is
+- No hover-dependent affordances (`@media (hover:none)`), reduced-motion support, skip link, ARIA landmarks and dialog semantics
 
 ## Accounts & security (offline)
 
@@ -126,7 +162,8 @@ The app is 100% offline, so accounts are **local to the device** — no email is
 - **`smoke7.js`** — 22 business-OS tests: PDF document content (quotation + invoice + logo), reports KPI math + period switching, reminders engine + bell, job timeline (auto + manual + site visit), job photos, quotation duplicate / convert-to-job / PDF, automatic backups + restore, quick-add sheet, FAB, settings additions.
 - **`smoke8.js`** — 10 deployment & login integrity tests: every `index.html` script must be in the SW precache list, SW cache versioning, network-first navigation, vercel.json no-cache headers, fail-fast blank-screen guard, and the full fresh-visitor auth cycle (sign up → app → sign out → wrong password → correct password → Enter-key submit).
 - **`smoke9.js`** — 16 dashboard & visibility tests: password eye toggle (sign-in / sign-up / reset / change-password), role picker, admin-created linked customer account, customer portal shell + data scoping (other customers' records must not leak), admin-view blocking, read-only invoice detail, customer PDF, admin↔customer session switching, self sign-up "not linked" state, admin dashboard upgrades.
-- Run all: `NODE_PATH=/usr/local/node_modules node smoke.js && … && node smoke9.js` (128 tests)
+- **`smoke10.js`** — 32 design-system tests: token integrity (every `var()` resolves, light/dark/auto layers, legacy aliases kept), stylesheet + service-worker wiring, grouped navigation completeness and badge accuracy, contextual subtitles, theme persistence, palette ranking/routing/highlighting, shortcut handling (incl. not firing while typing), chart axes/legends/tooltips/empty states, dashboard information architecture, "no `undefined`/`NaN` leaks" across every view, theme-independent print documents, mobile More sheet, and customer-portal scoping.
+- Run all: `npm run test:all` (163 checks across 10 suites)
 
 ## Structure
 
@@ -136,7 +173,10 @@ manifest.json         PWA manifest (phone "Add to Home screen")
 sw.js                 service worker — offline app shell (network-first navigation, versioned cache)
 vercel.json           Vercel deploy config — no-cache headers so deploys are never pinned by CDN/browser caches
 icons/                app icons (192/512)
-css/styles.css        design system
+docs/DESIGN_SYSTEM.md design system reference (tokens, components, breakpoints, a11y)
+css/tokens.css        design tokens — colour/type/space/radius/elevation/motion + light & dark themes
+css/styles.css        components — consumes tokens only, no hardcoded colours
+dev-preview.cjs       static preview server (wraps js/lan-server.cjs) → npm run preview
 js/utils.js           date / money / DOM helpers
 js/seed.js            demo data + AI pricing catalog
 js/sync.js            sync core: merge engine (UMD — browser + Node)
@@ -145,7 +185,7 @@ js/app.js             state, storage, modals, charts, WA helpers, line-item edit
 js/pdf.js             professional quotation/invoice documents (screen preview + Print/Save-as-PDF, offline)
 js/lan-server.cjs     LAN sync server (pure Node — used by the desktop app, tested directly)
 js/views/*.js         one file per module (incl. sync.js = Sync & Devices, customer.js = customer portal)
-js/main.js            bootstrap + navigation + desktop bridge
+js/main.js            bootstrap, grouped navigation + badges, topbar, theme, global search (⌘K), shortcuts
 electron/main.cjs     Electron main process (window, IPC, LAN server lifecycle, db.json backup)
 electron/preload.cjs  context-isolated bridge to the app
 package.json          app + electron-builder config (npm run build:win)
