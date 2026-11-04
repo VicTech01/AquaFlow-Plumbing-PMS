@@ -4,6 +4,8 @@ node_modules/
 # backups & exports
 *.bak
 aquaflow-backup-*.json
+victech-backup-*.json
+victech-sync-*.json
 
 # OS / editor
 .DS_Store

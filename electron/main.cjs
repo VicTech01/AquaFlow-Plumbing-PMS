@@ -1,4 +1,4 @@
-/* AquaFlow PMS — Electron main process (Windows desktop app) */
+/* VicTech PMS — Electron main process (Windows desktop app) */
 'use strict';
 const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
@@ -19,8 +19,8 @@ function createWindow() {
     height: 880,
     minWidth: 900,
     minHeight: 600,
-    title: 'AquaFlow PMS',
-    backgroundColor: '#f3f6fa',
+    title: 'VicTech PMS',
+    backgroundColor: '#f3f6fb',
     icon: path.join(ROOT, 'icons', 'icon-512.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -59,7 +59,26 @@ function stopServer() {
   return s.stop().then(() => null);
 }
 
+/* VicTech rebrand: Electron derives userData from the package name, so the
+   data file moves with it. Copy the old db.json across once — never overwrite. */
+function migrateLegacyState() {
+  try {
+    const target = stateFile();
+    if (fs.existsSync(target)) return;
+    const base = path.dirname(app.getPath('userData'));
+    for (const legacy of ['aquaflow-pms', 'AquaFlow PMS', 'AquaFlow']) {
+      const old = path.join(base, legacy, 'db.json');
+      if (fs.existsSync(old)) {
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.copyFileSync(old, target);
+        return;
+      }
+    }
+  } catch (e) {}
+}
+
 app.whenReady().then(() => {
+  migrateLegacyState();
   createWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 
@@ -86,7 +105,7 @@ app.whenReady().then(() => {
   }));
   ipcMain.handle('open-state-file', async () => {
     if (!fs.existsSync(stateFile())) {
-      dialog.showErrorBox('No data file yet', 'Use AquaFlow once — your database file is created on the first change.');
+      dialog.showErrorBox('No data file yet', 'Use VicTech once — your database file is created on the first change.');
       return null;
     }
     shell.showItemInFolder(stateFile());

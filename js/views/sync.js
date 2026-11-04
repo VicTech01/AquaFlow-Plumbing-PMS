@@ -29,7 +29,7 @@ VIEWS.sync = {
       <div class="stack">
         <div class="card">
           <h3>${icon('sync',15)} Sync with another device</h3>
-          <p class="muted small">Both devices must be on the <b>same Wi-Fi</b>. Enter the address shown on the other device's Sync page (e.g. your PC's AquaFlow shows <code>http://192.168.x.x:8484</code>).</p>
+          <p class="muted small">Both devices must be on the <b>same Wi-Fi</b>. Enter the address shown on the other device's Sync page (e.g. your PC's VicTech shows <code>http://192.168.x.x:8484</code>).</p>
           <div class="row" style="flex-wrap:wrap">
             <input class="inp" id="sy-addr" style="flex:1;min-width:220px" placeholder="http://192.168.1.50:8484" value="${esc(SYNC_STORE.address)}">
             <button class="btn ghost" id="sy-test">${icon('clock',14)} Test</button>
@@ -56,7 +56,7 @@ VIEWS.sync = {
         </div>` : `
         <div class="card">
           <h3>${icon('wifi',15)} This is the web version</h3>
-          <p class="muted small">You're running AquaFlow in a browser. For the full offline setup: install the <b>Windows desktop app</b> (it runs the Wi-Fi sharing server), then open that address on your phone and add it to the home screen.</p>
+          <p class="muted small">You're running VicTech in a browser. For the full offline setup: install the <b>Windows desktop app</b> (it runs the Wi-Fi sharing server), then open that address on your phone and add it to the home screen.</p>
         </div>`}
 
         <div class="card">
@@ -182,7 +182,7 @@ VIEWS.sync = {
       const blob = new Blob([JSON.stringify(db, null, 1)], {type:'application/json'});
       const aEl = document.createElement('a');
       aEl.href = URL.createObjectURL(blob);
-      aEl.download = `aquaflow-sync-${isoDate(today())}.json`;
+      aEl.download = `victech-sync-${isoDate(today())}.json`;
       document.body.appendChild(aEl); aEl.click(); aEl.remove();
       setTimeout(() => URL.revokeObjectURL(aEl.href), 5000);
       toast('Sync file exported — send it to the other device');
@@ -193,7 +193,7 @@ VIEWS.sync = {
       if(!f) return;
       try {
         const parsed = JSON.parse(await f.text());
-        if(!SyncCore.isValidDb(parsed)) throw new Error('not a valid AquaFlow sync file');
+        if(!SyncCore.isValidDb(parsed)) throw new Error('not a valid VicTech sync file');
         const merged = SyncCore.mergeDbs(db, parsed, {});
         db = merged; DB.save(); initChangeTracking();
         db.meta.lastSyncAt = new Date().toISOString();

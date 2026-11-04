@@ -1,4 +1,4 @@
-/* AquaFlow PMS — LAN sync server.
+/* VicTech PMS — LAN sync server.
    Pure Node (no Electron deps) so it runs inside the desktop app AND in tests.
    Serves: the web app (so phones on the same Wi-Fi can install it as a PWA)
    and a full-state sync API:  GET /api/sync  ·  POST /api/sync.
@@ -67,7 +67,7 @@ function start({ rootDir, port = 8484, initialDb = null, onPush = null, stateFil
 
     try {
       if (url.pathname === '/api/health') {
-        return send(200, JSON.stringify({ ok: true, app: 'aquaflow-pms', version: APP_VERSION, ip: lanIP(), port }));
+        return send(200, JSON.stringify({ ok: true, app: 'victech-pms', version: APP_VERSION, ip: lanIP(), port }));
       }
       if (url.pathname === '/api/sync' && req.method === 'GET') {
         if (!latest) return send(404, JSON.stringify({ error: 'no data on this device yet' }));

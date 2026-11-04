@@ -32,7 +32,7 @@ function run() {
     try { fn(); console.log('  ✓', name); }
     catch (e) { console.error('  ✗', name, '—', e.message); errors.push(name + ': ' + e.message); }
   }
-  console.log('AquaFlow PMS — interactive UI tests');
+  console.log('VicTech PMS — interactive UI tests');
 
   check('quote editor: create draft via UI clicks', () => {
     A.go('quote_edit', {});

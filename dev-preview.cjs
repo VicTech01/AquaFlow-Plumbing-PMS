@@ -15,7 +15,7 @@ const rootDir = __dirname;
 
 start({ rootDir, port }).then(api => {
   const info = api.info();
-  console.log('AquaFlow PMS — preview');
+  console.log('VicTech PMS — preview');
   console.log(`  local : http://localhost:${info.port}`);
   console.log(`  network: http://${lanIP()}:${info.port}  (phone on the same Wi-Fi)`);
   console.log('  Ctrl+C to stop');

@@ -34,7 +34,7 @@ function check(name, fn) {
   catch (e) { console.error('  ✗', name, '—', e.message); errors.push(name + ': ' + e.message); }
 }
 
-console.log('AquaFlow PMS — business OS tests');
+console.log('VicTech PMS — business OS tests');
 const norm = str => String(str).replace(/&nbsp;/g, '\u00a0').replace(/\u00a0/g, ' ');
 const ksh = n => new Intl.NumberFormat('en-KE', {style:'currency', currency:'KES', maximumFractionDigits:0}).format(n);
 

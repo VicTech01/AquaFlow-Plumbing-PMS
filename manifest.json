@@ -1,7 +1,7 @@
 {
-  "name": "AquaFlow PMS",
-  "short_name": "AquaFlow",
-  "description": "Offline-first plumbing business OS — jobs, quotes, invoices, inventory, expenses, WhatsApp, multi-device sync.",
+  "name": "VicTech Plumbing and Solar Solutions",
+  "short_name": "VicTech",
+  "description": "Offline-first business OS for VicTech Plumbing and Solar Solutions — leads, jobs, quotes, invoices, materials, expenses, WhatsApp, reports and multi-device sync.",
   "id": "aquaflow-pms",
   "start_url": "./index.html",
   "scope": "./",
@@ -11,8 +11,23 @@
   "theme_color": "#0b1b2b",
   "lang": "en-KE",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

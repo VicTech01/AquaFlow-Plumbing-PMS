@@ -53,7 +53,8 @@
 .logo-name{color:#fff;font-weight:var(--fw-extrabold);font-size:var(--fs-md);letter-spacing:var(--tr-tight);line-height:1.15}
 .logo-sub{
   font-size:var(--fs-2xs);color:#7b8ea6;text-transform:uppercase;
-  letter-spacing:.1em;font-weight:var(--fw-semibold);margin-top:1px;
+  letter-spacing:.08em;font-weight:var(--fw-semibold);margin-top:1px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .nav{display:flex;flex-direction:column;gap:var(--sp-05);flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:var(--sp-2)}
 .nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);background-clip:content-box}

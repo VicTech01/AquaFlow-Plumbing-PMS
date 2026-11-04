@@ -13,7 +13,7 @@ function check(name, fn) {
   catch (e) { console.error('  ✗', name, '—', e.message); errors.push(name + ': ' + e.message); }
 }
 
-console.log('AquaFlow PMS — design-system & shell tests');
+console.log('VicTech PMS — design-system & shell tests');
 
 const files = ['js/utils.js','js/seed.js','js/sync.js','js/auth.js','js/app.js','js/pdf.js',
   'js/views/dashboard.js','js/views/leads.js','js/views/jobs.js','js/views/dispatch.js','js/views/customers.js',
@@ -73,7 +73,7 @@ check('shell: search, palette root, profile menu, skip link and theme hook exist
 check('sw: service worker precaches the new stylesheet and bumped its cache', () => {
   const sw = readCss('sw.js');
   if (!sw.includes('./css/tokens.css')) throw new Error('tokens.css not precached');
-  if (sw.includes('aquaflow-shell-v16')) throw new Error('cache version not bumped — stale installs');
+  if (/shell-v1[0-7]\b/.test(sw)) throw new Error('cache version not bumped — stale installs');
 });
 
 setTimeout(() => {

@@ -3,13 +3,31 @@
 let db = null;
 let ui = { view:'dashboard', params:{} };
 
+/* ---- VicTech rebrand ------------------------------------------------------
+   Storage keys deliberately keep their original `aquaflow_*` prefix: renaming
+   them would orphan every existing installation's saved data, and they are
+   invisible to users. The brand lives in the UI, the manifest and documents.
+   What *is* migrated is the seeded business name — but only when the owner has
+   never edited it, so a name you typed yourself is never touched. */
+const BRAND_BIZ_NAME = 'VicTech Plumbing and Solar Solutions';
+const LEGACY_BIZ_NAMES = ['AquaFlow Plumbing Ltd', 'AquaFlow Plumbing', 'AquaFlow PMS', 'AquaFlow'];
+function migrateBrand(d){
+  try{
+    if(d && d.business && LEGACY_BIZ_NAMES.indexOf(d.business.name) >= 0){
+      d.business.name = BRAND_BIZ_NAME;
+      if(d.business.email === 'hello@aquaflow.co.ke') d.business.email = 'hello@victechsolar.co.ke';
+    }
+  }catch(e){}
+  return d;
+}
+
 const DB = {
   key: 'aquaflow_pms_v1',
   currentKey(){ return (typeof AUTH !== 'undefined') ? AUTH.dbKey(AUTH.session() || 'guest') : this.key; },
   load(){
     try{
       const raw = localStorage.getItem(this.currentKey());
-      if(raw){ const d = JSON.parse(raw); if(d && d.v === 1) return d; }
+      if(raw){ const d = JSON.parse(raw); if(d && d.v === 1) return migrateBrand(d); }
     }catch(e){}
     return null;
   },
@@ -42,7 +60,7 @@ const DB = {
       const key = (acc && acc.bizKey) || this.scanMostRecentKey();
       if(key){
         const raw = localStorage.getItem(key);
-        if(raw){ const d = JSON.parse(raw); if(d && d.v === 1){ db = d; return d; } }
+        if(raw){ const d = JSON.parse(raw); if(d && d.v === 1){ db = migrateBrand(d); return db; } }
       }
     } catch(e){}
     return null;

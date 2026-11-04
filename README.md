@@ -1,10 +1,11 @@
-# AquaFlow — Plumbing Business Management System
+# VicTech Plumbing and Solar Solutions — Business Management System
 
 **Manage jobs. Track materials. Get paid. Know your profit.**
 
-A complete, **offline-first** plumbing business OS — genuine VicTech Plumbing operating system:
-income tracking, expenses & net profit, a full sales pipeline from lead to paid,
-job-level material consumption, and **multi-device sync that never touches the cloud**.
+A complete, **offline-first** business OS for **VicTech Plumbing and Solar Solutions**:
+plumbing & solar jobs, income tracking, expenses & net profit, a full sales pipeline
+from lead to paid, job-level material consumption, and **multi-device sync that never
+touches the cloud**.
 
 Built for the Kenyan market (KES, M-Pesa payments, WhatsApp-first notifications, Nairobi areas).
 No external CDNs, no build step, no backend.
@@ -13,7 +14,7 @@ No external CDNs, no build step, no backend.
 
 ```
             ┌─────────────────┐
-            │   AquaFlow PMS  │
+            │    VicTech PMS  │
             │   Database      │   (local on every device — works with no internet)
             └────────┬────────┘
                      │  sync = merge (per-record, newest edit wins, deletions tracked)
@@ -34,13 +35,15 @@ No external CDNs, no build step, no backend.
 - **Offline transfer (fallback):** export a single `.json` sync file, move it over WhatsApp /
   USB / SD card, import on the other device. Importing merges — it never wipes.
 - **The Vercel website is only a mirror** for convenience — it is not where your data lives.
-- Desktop database file: `%APPDATA%/aquaflow-pms/db.json` (shown on the Sync page → "Show data file").
+- Desktop database file: `%APPDATA%/VicTech PMS/db.json` (shown on the Sync page → "Show data file").
+  The desktop app migrates the pre-rebrand file (`aquaflow-pms` / `AquaFlow PMS`) across on
+  first launch — existing data is never overwritten or lost.
 
 ### Building the Windows app
 
 ```bash
 npm install
-npm run build:win        # → dist/AquaFlow PMS Setup x.y.z.exe (NSIS installer)
+npm run build:win        # → dist/VicTech PMS Setup x.y.z.exe (NSIS installer)
 ```
 
 (On Windows this works natively. Cross-building from Linux needs wine for the uninstaller step.)
@@ -76,7 +79,7 @@ directly in a browser — data persists via localStorage either way.
 | **Inventory** | Stock levels, reorder alerts, cost vs retail value, movement history (received / **used on JOB-x** / damaged / count). Stock auto-deducts when invoices are created from quotes **and** when you "Record materials used" on a job (which also bills the line to the linked invoice if one exists) |
 | **Maintenance Reminders** | Recurring plans per customer & equipment, due-date engine, "schedule job" prefill, WhatsApp reminder, mark-done rolls the date forward |
 | **WhatsApp Notifications** | Outbox of every composed message (dispatch, quote sent, invoice, payment received, reminder, maintenance). Pre-filled `wa.me` chats — no Business API needed. Copy / mark-sent / clear. All templates editable in Settings |
-| **Sync & Devices** | Offline-first multi-device sync: Wi-Fi sync with any other AquaFlow device (pull / full-pull / full-push / merge), the desktop's built-in LAN sharing server (phones install from it), offline file export/import (merge, never wipe), per-device record counts, last-change/last-sync status |
+| **Sync & Devices** | Offline-first multi-device sync: Wi-Fi sync with any other VicTech device (pull / full-pull / full-push / merge), the desktop's built-in LAN sharing server (phones install from it), offline file export/import (merge, never wipe), per-device record counts, last-change/last-sync status |
 | **Settings** | Business profile (**owner name** — powers the dashboard greeting), **logo** (appears on PDF documents), labor rates, travel fees, VAT, ref prefixes, payment terms, WhatsApp templates, JSON export/import backup, **automatic backups** (3 rolling snapshots, restore), demo-data reset, **Team** (add/edit/enable/disable/delete technicians), **Account & security** (change password / security question, sign out, switch or delete local accounts) |
 | **Sign in / Sign up** | Local (offline) accounts with per-account data isolation, PBKDF2-hashed passwords, **role picker (business owner / customer)**, **show/hide password (eye) on every password field**, guest mode, and forgot-password via security question — see [Accounts & security](#accounts--security-offline) |
 
@@ -145,7 +148,10 @@ The app is 100% offline, so accounts are **local to the device** — no email is
 
 - **Sign up / sign in** — create an account with name + email + password, picking your role: **business owner (admin)** or **customer** (portal). Or continue as **guest** (the original local demo workspace, unchanged). Every password field has a **show/hide (eye) toggle**.
 - **Roles** — admin accounts get the full business OS. **Customer accounts** get a scoped, read-only portal (their own quotes, invoices, jobs, payments + PDFs) with the admin interface completely hidden. Admins create/link customer accounts from any customer record ("Customer account"); customers can also self sign up and get linked later. Customer portals read the shared business database on the device (works on the business's device and on any device that has received the data via sync).
-- **Per-account data isolation** — each account owns its own database (`aquaflow_pms_v1:<email>` in localStorage). Guest keeps the legacy `aquaflow_pms_v1` key. Accounts never see each other's data. New accounts start with a clean business workspace (zeroed counters, default templates & KES rates, no demo data) — plus a Team section in Settings so you can add your technicians before dispatching.
+- **Per-account data isolation** — each account owns its own database (`aquaflow_pms_v1:<email>` in localStorage).
+  Storage keys keep their original `aquaflow_*` prefix on purpose — renaming them would orphan
+  every existing installation's saved data, and they are invisible to users; the brand lives in
+  the UI, the manifest and the documents. Only the untouched seeded business name is migrated. Guest keeps the legacy `aquaflow_pms_v1` key. Accounts never see each other's data. New accounts start with a clean business workspace (zeroed counters, default templates & KES rates, no demo data) — plus a Team section in Settings so you can add your technicians before dispatching.
 - **Password storage** — PBKDF2-SHA256 (40,000 iterations, per-account random salt), implemented in pure JS (`js/auth.js`) and cross-verified against `node:crypto` in tests. Only salt + hash are stored; the password is never saved.
 - **Forgot password** — answer the **security question** you chose at sign-up to set a new password, entirely on-device. (A real emailed reset link would require a backend, which breaks the fully-offline design — the security-question flow is the offline-correct equivalent.)
 - **Session** — remembered per device until you sign out (Settings → Account & security, where you can also change your password, change your security question, or delete a local account and its data).

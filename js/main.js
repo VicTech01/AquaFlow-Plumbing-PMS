@@ -287,7 +287,7 @@ function openProfileMenu(){
   const name = acc ? acc.name : (db && db.business && db.business.ownerName) || 'Guest';
   const dark = currentTheme() === 'dark';
   r.innerHTML = `<div class="menu" role="menu" id="profile-menu">
-    <div class="menu-head"><b>${esc(name)}</b><span>${esc(acc ? acc.email : (sess === 'guest' ? 'Local guest workspace' : 'AquaFlow account'))}</span></div>
+    <div class="menu-head"><b>${esc(name)}</b><span>${esc(acc ? acc.email : (sess === 'guest' ? 'Local guest workspace' : 'VicTech account'))}</span></div>
     <div class="menu-row"><span>${dark ? 'Dark' : 'Light'} appearance</span>
       <div class="theme-seg" role="group" aria-label="Appearance">
         <button type="button" data-theme-btn="light" title="Light">${icon('sun',14)}</button>
@@ -601,7 +601,7 @@ function cmdkOpen(prefill){
   const root = $('#cmdk-root');
   if(!root) return;
   cmdkState = {open:true, q:prefill||'', sel:0, rows:[]};
-  root.innerHTML = `<div class="cmdk" id="cmdk" role="dialog" aria-modal="true" aria-label="Search AquaFlow">
+  root.innerHTML = `<div class="cmdk" id="cmdk" role="dialog" aria-modal="true" aria-label="Search VicTech">
     <div class="cmdk-panel">
       <div class="cmdk-in">
         ${icon('search',18)}

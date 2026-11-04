@@ -10,7 +10,7 @@ function check(name, fn) {
   catch (e) { console.error('  ✗', name, '—', e.message); errors.push(name + ': ' + e.message); }
 }
 
-console.log('AquaFlow PMS — dashboards & password-visibility tests');
+console.log('VicTech PMS — dashboards & password-visibility tests');
 
 const files = ['js/utils.js','js/seed.js','js/sync.js','js/auth.js','js/app.js','js/pdf.js',
   'js/views/dashboard.js','js/views/leads.js','js/views/jobs.js','js/views/dispatch.js','js/views/customers.js',

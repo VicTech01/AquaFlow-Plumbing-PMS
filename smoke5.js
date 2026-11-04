@@ -13,7 +13,7 @@ function check(name, fn) {
   catch (e) { console.error('  ✗', name, '—', e.message); errors.push(name + ': ' + e.message); }
 }
 
-console.log('AquaFlow PMS — sync & offline tests');
+console.log('VicTech PMS — sync & offline tests');
 
 /* ---------- merge engine ---------- */
 function mkDb(overrides) {
@@ -120,7 +120,7 @@ async function serverTests() {
   const h = await getJson('/api/health');
   check('lan: /api/health reports app + ip + port', () => {
     const j = JSON.parse(h.body);
-    if (!j.ok || j.app !== 'aquaflow-pms') throw new Error('bad health: ' + h.body);
+    if (!j.ok || j.app !== 'victech-pms') throw new Error('bad health: ' + h.body);
     if (!j.ip) throw new Error('no ip in health');
   });
 
@@ -147,7 +147,7 @@ async function serverTests() {
   });
   const idx = await getJson('/');
   check('lan: serves the web app (phones install from here)', () => {
-    if (idx.status !== 200 || !idx.body.includes('AquaFlow')) throw new Error('index not served');
+    if (idx.status !== 200 || !idx.body.includes('VicTech')) throw new Error('index not served');
     if (!/text\/html/.test(idx.ct || '')) throw new Error('wrong content type');
   });
   const man = await getJson('/manifest.json');

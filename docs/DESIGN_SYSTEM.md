@@ -1,6 +1,6 @@
-# AquaFlow Design System — v2.0
+# VicTech Design System — v2.0
 
-> The visual and interaction language for AquaFlow PMS.
+> The visual and interaction language for VicTech PMS — Plumbing & Solar Solutions.
 > One rule above all others: **the interface must never be the reason a plumber
 > loses money, misses a job or distrusts a number.** Everything below exists to
 > make the business state legible in under ten seconds, on a laptop in the
@@ -19,6 +19,36 @@
 No frameworks, no build step, no CDN. The app is offline-first and stays that way:
 every token is a CSS custom property, every chart is hand-drawn SVG, every icon is
 an inline path.
+
+---
+
+## Brand
+
+**VicTech Plumbing & Solar Solutions** — a plumbing business that installs and services
+solar. The identity carries both trades:
+
+| Element | Form | Where |
+|---|---|---|
+| Mark | Aqua-gradient rounded square, **white water droplet** (plumbing) + **amber sun** (solar), rays round-capped | app icons 192/512, favicon |
+| Wordmark | `VicTech` — extrabold, tight tracking | sidebar logo, auth screen, profile chip |
+| Descriptor | `PLUMBING & SOLAR` — 11 px uppercase, tracked, muted | sidebar under the wordmark |
+| Full name | `VicTech Plumbing and Solar Solutions` | manifest `name`, documents, settings, new-account default |
+| Product name | `VicTech PMS` | window title, installer, npm/LAN identifiers, print footer |
+
+Rules:
+
+* The **droplet alone** is the in-app glyph (favicons, `.logo-mark`, empty states) — at 16–24 px
+  the sun would vanish, so solar lives in the wordmark at those sizes. The droplet + sun
+  lockup only appears at ≥ 48 px.
+* Wordmark is **title-case `VicTech`** in running UI; uppercase `VICTECH` is reserved for
+  printed/legal contexts.
+* The amber sun (`#f59e0b` / `#fbbf24`) is the *only* warm accent the brand may use outside
+  status colours, and never as a data colour.
+* The stored business name spells out **"and"** (`VicTech Plumbing and Solar Solutions`) because it
+  is a legal name that gets HTML-escaped onto every quotation and invoice; the ampersand form is
+  reserved for compact descriptors (sidebar, page titles) where space is tight.
+* Identifiers that users never see — storage keys, the desktop bridge, install ids — keep
+  their original values so upgrades never orphan data (documented in the README).
 
 ---
 
@@ -93,7 +123,8 @@ Every status colour also has `-soft` (chip fill), `-softer` (panel fill),
 
 * `html[data-theme="light" | "dark"]` swaps the semantic layer only.
 * No attribute → the OS preference wins (`prefers-color-scheme`).
-* The user's explicit choice persists in `localStorage['aquaflow_theme_v1']` and
+* The user's explicit choice persists in `localStorage['aquaflow_theme_v1']` (the key name
+  is retained from the original build so saved preferences survive upgrades) and
   is applied by an inline script in `<head>` **before first paint** (no flash).
 * Entry points: sidebar moon/sun button, profile menu segmented control, the More
   sheet on mobile, and `Ctrl+D`.

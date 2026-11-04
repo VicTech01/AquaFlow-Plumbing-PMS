@@ -1,4 +1,4 @@
-/* AquaFlow PMS — Electron preload (minimal, context-isolated bridge) */
+/* VicTech PMS — Electron preload (minimal, context-isolated bridge) */
 'use strict';
 const { contextBridge, ipcRenderer } = require('electron');
 

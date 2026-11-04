@@ -11,7 +11,7 @@ function check(name, fn) {
   catch (e) { console.error('  ✗', name, '—', e.message); errors.push(name + ': ' + e.message); }
 }
 
-console.log('AquaFlow PMS — accounts tests');
+console.log('VicTech PMS — accounts tests');
 
 /* ---------- 1) crypto core (pure Node, outside jsdom) ---------- */
 const files = ['js/utils.js','js/seed.js','js/sync.js','js/auth.js'];

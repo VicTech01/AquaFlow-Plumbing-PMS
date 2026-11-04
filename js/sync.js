@@ -1,4 +1,4 @@
-/* AquaFlow PMS — sync core (merge engine).
+/* VicTech PMS — sync core (merge engine).
    Works in the browser (window.SyncCore) and in Node/Electron (module.exports).
    Offline-first: every record carries updatedAt; merge = union of records,
    last-write-wins per record, tombstones for deletions, counters take the max. */

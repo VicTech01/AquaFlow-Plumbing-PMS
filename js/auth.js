@@ -1,5 +1,5 @@
 'use strict';
-/* ================= AquaFlow PMS — accounts (offline-first, local) =================
+/* ================= VicTech PMS — accounts (offline-first, local) =================
    Email + password per device. PBKDF2-SHA256 (pure JS, no backend).
    Each account owns its own database (localStorage key per email).
    Forgot password = answer the security question set at sign-up (works offline).
@@ -240,7 +240,7 @@ function emptyDb(ownerName){
     v:1,
     counters:{job:0, quote:0, invoice:0, lead:0},
     business:{
-      name:'AquaFlow Plumbing Ltd', ownerName: ownerName || 'Boss', phone:'', whatsapp:'',
+      name:'VicTech Plumbing and Solar Solutions', ownerName: ownerName || 'Boss', phone:'', whatsapp:'',
       email:'', address:'',
       vatRate:16, dueDays:14, currency:'KES',
       rates:{standard:1200, senior:1800, apprentice:900},
@@ -268,8 +268,8 @@ AUTH.renderAuth = function(initialMode){
         <div class="logo-mark" style="width:44px;height:44px">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2s7 7.6 7 12a7 7 0 1 1-14 0c0-4.4 7-12 7-12z"/></svg>
         </div>
-        <h1>AquaFlow</h1>
-        <p class="muted small">Plumbing Business OS — manage jobs, track materials, get paid, know your profit.</p>
+        <h1>VicTech</h1>
+        <p class="muted small">Plumbing and Solar Solutions — manage jobs, track materials, get paid, know your profit.</p>
       </div>
       <div class="auth-tabs">
         <button id="au-tab-in" class="active">Sign in</button>

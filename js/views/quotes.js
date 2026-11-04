@@ -251,7 +251,7 @@ VIEWS.quote_edit = {
       $('#ai-apply').onclick = () => {
         qe.items = res.lines.map(l => ({kind:l.kind, desc:l.desc, qty:l.qty, unit:l.unit, price:l.price, invId:l.invId||null}));
         if(!qe.title){ qe.title = res.cat.label; $('#qe-title').value = qe.title; }
-        qe.ai = {model:'aquaflow-rules-v1', type:res.cat.id, conf:res.conf, at:new Date().toISOString()};
+        qe.ai = {model:'victech-rules-v1', type:res.cat.id, conf:res.conf, at:new Date().toISOString()};
         toast(`Estimate applied (${confLabel} confidence) — review before sending`);
         reRenderEditor();
       };

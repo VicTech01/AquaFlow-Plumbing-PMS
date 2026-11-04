@@ -11,7 +11,7 @@ function check(name, fn) {
   catch (e) { console.error('  ✗', name, '—', e.message); errors.push(name + ': ' + e.message); }
 }
 
-console.log('AquaFlow PMS — business OS upgrade tests');
+console.log('VicTech PMS — business OS upgrade tests');
 
 const files = ['js/utils.js','js/seed.js','js/sync.js','js/auth.js','js/app.js','js/pdf.js',
   'js/views/dashboard.js','js/views/leads.js','js/views/jobs.js','js/views/dispatch.js','js/views/customers.js',
@@ -249,7 +249,7 @@ setTimeout(() => {
     const r = A.restoreAutoBackup(0);
     if (!r.ok) throw new Error('restore failed: ' + r.error);
     if (db().business.name !== 'Backup Probe Co') throw new Error('restore did not revert: ' + db().business.name);
-    db().business.name = 'AquaFlow Plumbing Ltd';
+    db().business.name = 'VicTech Plumbing and Solar Solutions';
     A.clearAutoBackups();
     A.commit();
   });

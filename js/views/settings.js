@@ -125,7 +125,7 @@ VIEWS.settings = {
         </div>
         <div class="card soft">
           <h3>${icon('spark',15)} About the AI estimate assistant</h3>
-          <p class="muted small" style="margin:0">The assistant is a local rules-pricing model (<b>aquaflow-rules-v1</b>) built from your labor rates, live inventory prices, standard scopes of work and zone travel fees. It explains every line it generates and flags stock problems. You stay in control — nothing is sent until you approve.</p>
+          <p class="muted small" style="margin:0">The assistant is a local rules-pricing model (<b>victech-rules-v1</b>) built from your labor rates, live inventory prices, standard scopes of work and zone travel fees. It explains every line it generates and flags stock problems. You stay in control — nothing is sent until you approve.</p>
         </div>
       </div>
       <div class="stack">
@@ -168,7 +168,7 @@ VIEWS.settings = {
       const blob = new Blob([JSON.stringify(db, null, 2)], {type:'application/json'});
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `aquaflow-backup-${isoDate(today())}.json`;
+      a.download = `victech-backup-${isoDate(today())}.json`;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
       toast('Backup downloaded');
@@ -184,7 +184,7 @@ VIEWS.settings = {
           db = d; commit(); go('dashboard', {});
           $('#side-foot').innerHTML = sideFootHTML();
           toast('Data imported successfully');
-        }catch(err){ toast('Import failed — not a valid AquaFlow backup','err'); }
+        }catch(err){ toast('Import failed — not a valid VicTech backup','err'); }
       };
       r.readAsText(f);
     };

@@ -1,6 +1,6 @@
 {
-  "name": "aquaflow-pms",
-  "productName": "AquaFlow PMS",
+  "name": "victech-pms",
+  "productName": "VicTech PMS",
   "version": "2.0.0",
   "description": "Offline-first plumbing business OS — desktop (Windows) + phone sync over LAN",
   "author": "VicTech Plumbing <victor@victech.co.ke>",
@@ -18,7 +18,7 @@
   },
   "build": {
     "appId": "ke.victech.aquaflow",
-    "productName": "AquaFlow PMS",
+    "productName": "VicTech PMS",
     "directories": {
       "output": "dist"
     },
@@ -43,7 +43,7 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "shortcutName": "AquaFlow PMS",
+      "shortcutName": "VicTech PMS",
       "runAfterFinish": true
     }
   }

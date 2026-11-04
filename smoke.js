@@ -33,7 +33,7 @@ function check(name, fn) {
   catch (e) { console.error('  ✗', name, '—', e.message); errors.push(name + ': ' + e.message); }
 }
 
-console.log('AquaFlow PMS — smoke tests');
+console.log('VicTech PMS — smoke tests');
 
 check('seed data loaded', () => {
   if (!db().customers.length) throw new Error('no customers');

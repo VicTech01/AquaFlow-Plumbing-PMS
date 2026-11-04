@@ -32,7 +32,7 @@ function run() {
     try { fn(); console.log('  ✓', name); }
     catch (e) { console.error('  ✗', name, '—', e.message); errors.push(name + ': ' + e.message); }
   }
-  console.log('AquaFlow PMS — round 3 feature tests');
+  console.log('VicTech PMS — round 3 feature tests');
 
   check('job categories include Solar + Drainage + Gas + Water supply', () => {
     A.go('jobs', {});

@@ -1,10 +1,10 @@
-/* AquaFlow PMS — service worker (phone PWA offline support).
+/* VicTech PMS — service worker (phone PWA offline support).
    v17 — navigation requests are network-first so a new deployment reaches
    returning users immediately; the cache version is bumped on every change to
    the shell so stale installs self-heal on the next load.
    Sync/API traffic is never cached — it is live data. */
 'use strict';
-const CACHE = 'aquaflow-shell-v17';
+const CACHE = 'victech-shell-v18';
 const SHELL = [
   './',
   './index.html',

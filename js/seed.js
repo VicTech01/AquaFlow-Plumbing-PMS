@@ -259,13 +259,13 @@ function makeSeed(){
 
   const outbox = [
     {id:uid('o'), to:NJERI.phone, contact:NJERI.name, purpose:'Dispatch',
-     text: fillTemplate(DEFAULT_TEMPLATES.dispatch,{customer:'Grace',tech:'Brian Otieno',address:'7 Runda Ave, Runda',job:'Geyser 50L replacement install',time:'11:00',business:'AquaFlow Plumbing Ltd'}),
+     text: fillTemplate(DEFAULT_TEMPLATES.dispatch,{customer:'Grace',tech:'Brian Otieno',address:'7 Runda Ave, Runda',job:'Geyser 50L replacement install',time:'11:00',business:'VicTech Plumbing and Solar Solutions'}),
      createdAt:new Date(Date.now()-3600e3).toISOString(), sent:false},
     {id:uid('o'), to:KAMAU.phone, contact:KAMAU.name, purpose:'Quote sent',
-     text: fillTemplate(DEFAULT_TEMPLATES.quote_sent,{customer:'Wanjiku',ref:`QUO-${Y}-0001`,total:money(Math.round(sum(quotes[2].items,i=>i.qty*i.price)*1.16)),title:'Bathroom refit',valid:fmtDate(D(10)),business:'AquaFlow Plumbing Ltd'}),
+     text: fillTemplate(DEFAULT_TEMPLATES.quote_sent,{customer:'Wanjiku',ref:`QUO-${Y}-0001`,total:money(Math.round(sum(quotes[2].items,i=>i.qty*i.price)*1.16)),title:'Bathroom refit',valid:fmtDate(D(10)),business:'VicTech Plumbing and Solar Solutions'}),
      createdAt:new Date(Date.now()-86400e3).toISOString(), sent:false},
     {id:uid('o'), to:PARK.phone, contact:PARK.name, purpose:'Payment received',
-     text: fillTemplate(DEFAULT_TEMPLATES.payment_received,{customer:'The Park Hotel',amount:money(inv7),ref:`INV-${Y}-0007`,business:'AquaFlow Plumbing Ltd'}),
+     text: fillTemplate(DEFAULT_TEMPLATES.payment_received,{customer:'The Park Hotel',amount:money(inv7),ref:`INV-${Y}-0007`,business:'VicTech Plumbing and Solar Solutions'}),
      createdAt:new Date(Date.now()-3*86400e3).toISOString(), sent:true}
   ];
 
@@ -310,8 +310,8 @@ function makeSeed(){
     v:1,
     counters:{job:18, quote:6, invoice:11, lead:5},
     business:{
-      name:'AquaFlow Plumbing Ltd', ownerName:'Victor', phone:'+254 712 345 678', whatsapp:'254712345678',
-      email:'hello@aquaflow.co.ke', address:'12 Riverside Avenue, Westlands, Nairobi',
+      name:'VicTech Plumbing and Solar Solutions', ownerName:'Victor', phone:'+254 712 345 678', whatsapp:'254712345678',
+      email:'hello@victechsolar.co.ke', address:'12 Riverside Avenue, Westlands, Nairobi',
       vatRate:16, dueDays:14, currency:'KES',
       rates:{standard:1200, senior:1800, apprentice:900},
       travel:{city:400, outskirts:1200, county:2500},

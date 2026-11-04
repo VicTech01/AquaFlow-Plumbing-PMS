@@ -17,7 +17,7 @@ function check(name, fn) {
   catch (e) { console.error('  ✗', name, '—', e.message); errors.push(name + ': ' + e.message); }
 }
 
-console.log('AquaFlow PMS — deployment & login integrity tests');
+console.log('VicTech PMS — deployment & login integrity tests');
 const dir = __dirname;
 const html = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
 
@@ -30,11 +30,11 @@ check('deploy: every <script src> in index.html is precached by sw.js', () => {
   if (missing.length) throw new Error('not in SW SHELL: ' + missing.join(', '));
 });
 
-check('deploy: sw.js cache is versioned (aquaflow-shell-vN, N>=15)', () => {
+check('deploy: sw.js cache is versioned (<brand>-shell-vN, N>=18)', () => {
   const sw = fs.readFileSync(path.join(dir, 'sw.js'), 'utf8');
-  const m = sw.match(/aquaflow-shell-v(\d+)/);
+  const m = sw.match(/(?:aquaflow|victech)-shell-v(\d+)/);
   if (!m) throw new Error('no versioned cache name');
-  if (+m[1] < 15) throw new Error('cache version ' + m[1] + ' < 15 — bump it when the shell changes');
+  if (+m[1] < 18) throw new Error('cache version ' + m[1] + ' < 18 — bump it when the shell changes');
 });
 
 check('deploy: sw.js is network-first for navigations', () => {
